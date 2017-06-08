@@ -1,4 +1,6 @@
 /* eslint-disable semi */
+const avro = require('avsc');
+
 const processRecord = (record, callback) => {
   return Buffer.from(record.kinesis.data, 'base64').toString('utf8');
 };
