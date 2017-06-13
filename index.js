@@ -27,7 +27,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'Bib', apiUri: 'https://api.nypltech.org/api/v0.1/' },
+      { schema: 'HoldRequestService', apiUri: 'https://api.nypltech.org/api/v0.1/' },
       context
     );
   }
