@@ -1,21 +1,16 @@
 /* eslint-disable semi */
-const avro = require('avsc');
-
-const processRecord = (record, callback) => {
-  return Buffer.from(record.kinesis.data, 'base64').toString('utf8');
-};
-
-const kinesisStreamHandler = (records, context) => {
-  const data = records.map(record => processRecord(record));
-  return data;
-};
+const NyplStreamsClient = require('@nypl/nypl-streams-client');
 
 exports.handler = (event, context, callback) => {
   const record = event.Records[0] || {};
-
+  const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: 'https://api.nypltech.org/api/v0.1/' });
   // Handle Kinesis Stream
   if (record.kinesis && record.kinesis.data) {
-    const kinesisData = kinesisStreamHandler(event.Records, context);
-    console.log('Kinesis Data', kinesisData, typeof kinesisData);
+    const decodedKinesisData = streamsClient.decodeData('Bib', event.Records.map(i => i.kinesis.data));
+
+    // Resolve the Promise and do something with the decoded data
+    decodedKinesisData
+      .then((result) => console.log('result:', result))
+      .catch((err) => console.log('rejected:', err));
   }
 };

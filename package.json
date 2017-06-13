@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/NYPL/nypl-hold-request-consumer#readme",
   "dependencies": {
-    "avsc": "5.0.3"
+    "@nypl/nypl-streams-client": "0.1.3"
   },
   "devDependencies": {
     "node-lambda": "0.10.0",
