@@ -1,7 +1,7 @@
+/* eslint-disable semi */
 const chai = require('chai');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const assert = chai.assert;
 const expect = chai.expect;
 const HoldRequestConsumer = require('../index.js');
 const event = require('../sample/sample_event.json');
@@ -61,7 +61,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
     });
 
     it('should return a promise if the proper event.Records, schema and apiUri are defined', () => {
-      const result = kinesisHandlerFunc(event.Records, { schema: schemaName, apiUri: 'https://api.nypltech.org/api/v0.1/' }, null);
+      const result = kinesisHandlerFunc(event.Records, { schema: schemaName, apiUri }, null);
       expect(result).to.be.a('promise');
     });
   });

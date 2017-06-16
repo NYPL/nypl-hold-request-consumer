@@ -118,5 +118,25 @@ $ npm run test // Will run all tests found in the ./test/ path
 ```
 
 ```javascript
-$ npm run test handler.test.js // Will run a specific test for the given filename
+$ npm run test [filename].test.js // Will run a specific test for the given filename
 ```
+### Linting
+This codebase currently uses [Standard JS](https://www.npmjs.com/package/standard) as the JavaScript linter.
+
+To lint files use the following NPM command:
+```javascript
+$ npm run lint // Will lint all files except those listed in package.json under standard->ignore
+```
+
+```javascript
+$ npm run lint [filename].js // Will lint the specific JS file
+```
+
+### NPM Dependencies
+* [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
+* [node-lambda](https://www.npmjs.com/package/node-lambda)
+* [mocha](https://www.npmjs.com/package/mocha)
+* [chai](https://www.npmjs.com/package/chai)
+* [sinon](https://www.npmjs.com/package/sinon)
+* [sinon-chai](https://www.npmjs.com/package/sinon-chai)
+* [standard-js](https://www.npmjs.com/package/standard)

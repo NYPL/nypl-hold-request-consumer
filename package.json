@@ -4,7 +4,7 @@
   "description": "An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider.",
   "main": "index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/standard index.js",
+    "lint": "./node_modules/.bin/standard",
     "local-run": "./node_modules/.bin/node-lambda run -j ./sample/sample_event.json",
     "deploy-qa": "./node_modules/.bin/node-lambda deploy -e qa -f ./config/qa.env -S config/event_sources_qa.json -b subnet-f4fe56af -g sg-1d544067",
     "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json -b subnet-f4fe56af -g sg-1d544067",
@@ -45,9 +45,20 @@
     "standard": "10.0.2"
   },
   "standard": {
+    "globals": [
+      "describe",
+      "context",
+      "before",
+      "beforeEach",
+      "after",
+      "afterEach",
+      "it",
+      "expect"
+    ],
     "ignore": [
       "/sample/",
-      "/build/"
+      "/build/",
+      "config"
     ]
   }
 }
