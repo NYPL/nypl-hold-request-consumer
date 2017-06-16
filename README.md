@@ -64,12 +64,12 @@ $ npm run setup-qa-env
 $ npm run setup-prod-env
 ```
 
-These environment specific `.env` files will be used during the **deployment** process via the `node-lambda` module.
+These environment specific `.env` files will be used to set **environment variables** when deployed by the `node-lambda` module.
 
 #### Step 4: Setup your environment specific `event_sources_{environment}.json` file
 This file is used by the `node-lambda` module to deploy your Lambda with the correct mappings.
 
-You **must** edit the file once created and add your specific **EventSourceArn** value, found in the AWS Console
+You **must** edit the file once created and add your specific **EventSourceArn** value, found in the AWS Console. If no mapping is necessary, update the file to an empty object `{}`.
 
 Running the following NPM Commands will:
 
