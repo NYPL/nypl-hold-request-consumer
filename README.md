@@ -108,7 +108,18 @@ Next, run the following NPM command to use the **sample** event found in `./samp
 $ npm run local-run
 ```
 
-### Running Tests
+### Tests
+#### Test Coverage
+[Istanbul](https://github.com/istanbuljs/nyc) is currently used in conjunction with Mocha to report coverage of all unit tests.
+
+Simply run:
+```javascript
+$ npm run test
+```
+
+Executing this NPM command will create a `./coverage/` folder with an interactive UI reporting the coverage analysis, now you can open up `./coverage/index.html` in your browser to view an enhanced report.
+
+#### Running Unit Tests
 Unit tests are written using [Mocha](https://github.com/mochajs/mocha), [Chai](https://github.com/chaijs) and [Sinon](https://github.com/domenic/sinon-chai). All tests can be found under the `./test` directory. Mocha configurations are set and can be modified in `./test/mocha.opts`.
 
 > To run test, use the following NPM script found in `package.json`.
