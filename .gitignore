@@ -18,3 +18,4 @@ coverage
 # Misc
 .DS_Store
 *.swp
+*.nyc_output
