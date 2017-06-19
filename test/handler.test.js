@@ -25,7 +25,6 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
 
     it('should call the kinesisHandler function', () => {
       HoldRequestConsumer.handler(event);
-      expect(kinesisHandlerStub).to.have.been.called;
       expect(kinesisHandlerStub).to.be.calledWith(event.Records);
     });
   });

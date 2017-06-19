@@ -45,16 +45,9 @@
     "standard": "10.0.2"
   },
   "standard": {
-    "globals": [
-      "describe",
-      "context",
-      "before",
-      "beforeEach",
-      "after",
-      "afterEach",
-      "it",
-      "expect"
-    ],
+    "env": {
+      "mocha": true
+    },
     "ignore": [
       "/sample/",
       "/build/",
