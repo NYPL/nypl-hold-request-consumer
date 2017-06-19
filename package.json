@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/NYPL/nypl-hold-request-consumer#readme",
   "dependencies": {
-    "@nypl/nypl-streams-client": "0.1.3"
+    "@nypl/nypl-streams-client": "0.1.4"
   },
   "devDependencies": {
     "chai": "4.0.2",
