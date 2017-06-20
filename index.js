@@ -20,8 +20,8 @@ exports.kinesisHandler = (records, opts = {}, context) => {
 
     if (!opts.apiUri || opts.apiUri === '') {
       throw HoldRequestConsumerError({
-        message: 'kinesisHandler(): missing schema configuration parameter',
-        type: 'missing-nypl-data-api'
+        message: 'kinesisHandler(): missing apiUri configuration parameter',
+        type: 'missing-nypl-data-api-uri'
       });
     }
 
