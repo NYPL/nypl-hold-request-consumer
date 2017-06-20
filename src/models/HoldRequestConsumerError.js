@@ -1,10 +1,11 @@
-function HoldRequestConsumerError(settings, implementationContext) {
+/* eslint-disable semi */
+function HoldRequestConsumerError (settings, implementationContext) {
   if (!(this instanceof HoldRequestConsumerError)) {
     return new HoldRequestConsumerError(settings, implementationContext);
   }
-  // Ensure that settings exists to prevent refernce errors.
+  // Ensure that settings exists to prevent reference errors
   settings = settings || {};
-  // Override the default name property (Error). This is basically zero value-add.
+  // Override the default name property (Error)
   this.name = 'HoldRequestConsumerError';
   this.type = settings.type || 'generic-hold-request-consumer-error';
   this.message = settings.message || 'An error occurred';
