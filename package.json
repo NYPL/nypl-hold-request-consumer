@@ -10,8 +10,10 @@
     "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json -b subnet-f4fe56af -g sg-1d544067",
     "package": "./node_modules/.bin/node-lambda package",
     "setup-env": "cp ./sample/.env.sample ./.env",
+    "setup-dev-env": "echo $'SLACK_TOKEN=xxxx\nSENDGRID_API_KEY=xxxx' > ./config/dev.env",
     "setup-qa-env": "echo $'SLACK_TOKEN=xxxx\nSENDGRID_API_KEY=xxxx' > ./config/qa.env",
     "setup-prod-env": "echo $'SLACK_TOKEN=xxxx\nSENDGRID_API_KEY=xxxx' > ./config/prod.env",
+    "setup-dev-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_dev.json",
     "setup-qa-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_qa.json",
     "setup-prod-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_prod.json",
     "test": "./node_modules/.bin/nyc --reporter=html --reporter=text ./node_modules/.bin/mocha"
@@ -34,10 +36,13 @@
   },
   "homepage": "https://github.com/NYPL/nypl-hold-request-consumer#readme",
   "dependencies": {
-    "@nypl/nypl-streams-client": "0.1.4"
+    "@nypl/nypl-streams-client": "0.1.4",
+    "axios": "0.16.2",
+    "qs": "6.4.0"
   },
   "devDependencies": {
     "chai": "4.0.2",
+    "dotenv": "4.0.0",
     "mocha": "3.4.2",
     "node-lambda": "0.10.0",
     "nyc": "11.0.2",
