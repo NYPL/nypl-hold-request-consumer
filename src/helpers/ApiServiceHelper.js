@@ -29,6 +29,124 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret === '' || this.scope === '') ? false : true;
   };
 
+  this.setItemApiUrlToRecord = (records, itemApiUrl) => {
+    if (!itemApiUrl || itemApiUrl === '') {
+      throw HoldRequestConsumerError({
+        message: 'setItemApiUrlToRecord(): the itemApiUrl is not defined or empty',
+        type: 'undefined-item-api-url-parameter'
+      });
+    }
+
+    if (!records) {
+      throw HoldRequestConsumerError({
+        message: 'setItemApiUrlToRecord(): the records array is not defined',
+        type: 'undefined-records-array-parameter'
+      });
+    }
+
+    if (!records.length) {
+      throw HoldRequestConsumerError({
+        message: 'setItemApiUrlToRecord(): the records array is empty',
+        type: 'empty-records-array-parameter'
+      });
+    }
+
+    let fullItemUrl = itemApiUrl;
+
+    // Iterate over the records array grouped by nyplSource
+    records.map((currentItem, i) => {
+      Object.keys(currentItem).forEach((key) => {
+        if (!currentItem[key].hasOwnProperty('decodedData')) {
+          throw HoldRequestConsumerError({
+            message: 'setItemApiUrlToRecord(): the decodedData object key is not defined',
+            type: 'undefined-object-property-decoded-data',
+            details: currentItem[key]
+          });
+        }
+
+        const arrayOfDecodedRecords = currentItem[key]['decodedData'];
+
+        if (typeof arrayOfDecodedRecords !== 'object' && !arrayOfDecodedRecords.length) {
+          throw HoldRequestConsumerError({
+            message: 'setItemApiUrlToRecord(): the decodedData object is empty',
+            type: 'empty-object-property-decoded-data',
+            details: arrayOfDecodedRecords
+          });
+        }
+
+        Object.keys(arrayOfDecodedRecords).forEach((k) => {
+          // Verify the existence of the 'record' property
+          if (!arrayOfDecodedRecords[k].hasOwnProperty('record')) {
+            throw HoldRequestConsumerError({
+              message: 'setItemApiUrlToRecord(): the record object key within decodedData is not defined',
+              type: 'empty-object-property-record',
+              details: arrayOfDecodedRecords[k]
+            });
+          }
+          // Append the record value (id) to url string
+          fullItemUrl += arrayOfDecodedRecords[k].record;
+          // Append a comma (,) to all except the last item
+          if (arrayOfDecodedRecords.length !== (parseInt(k) + 1)) {
+            fullItemUrl += ',';
+          }
+        });
+
+        // Append the nyplSource to the end of the string
+        fullItemUrl += '&nyplSource=' + key;
+
+        if (currentItem[key].hasOwnProperty('itemApiUrl')) {
+          throw HoldRequestConsumerError({
+            message: 'setItemApiUrlToRecord(): the itemApiUrl object key within decodedData already exists',
+            type: 'existent-object-property-item-api-url'
+          });
+        }
+
+        // Extend the source object to include the itemApiUrl
+        currentItem[key]['itemApiUrl'] = fullItemUrl;
+      });
+    });
+
+    return records;
+  };
+
+  this.getItemData = (records, apiUrl) => {
+    // Scaffold for API Call to Item service
+  };
+
+  this.groupRecordsBy = (records, key) => {
+    if (!records) {
+      throw HoldRequestConsumerError({
+        message: 'groupRecordsBy(): the records array is not defined',
+        type: 'undefined-records-array-parameter'
+      });
+    }
+
+    if (!records.length) {
+      throw HoldRequestConsumerError({
+        message: 'groupRecordsBy(): the records array is empty',
+        type: 'empty-records-array-parameter'
+      });
+    }
+
+    if (!key || key === '') {
+      throw HoldRequestConsumerError({
+        message: 'groupRecordsBy(): the key parameter is not defined or empty',
+        type: 'undefined-key-parameter'
+      });
+    }
+
+    const groupedRecordsArray = [];
+    const matchingRecordsObject = records.reduce((allRecords, record) => {
+      allRecords[record[key]] = allRecords[record[key]] || { 'decodedData': [] };
+      allRecords[record[key]]['decodedData'].push(record);
+      return allRecords;
+    }, {});
+    // Insert into array the grouped object
+    groupedRecordsArray.push(matchingRecordsObject);
+
+    return groupedRecordsArray;
+  };
+
   this.getOAuthToken = (cachedToken) => {
     const authConfig = {
       client_id: this.clientId,

@@ -42,11 +42,13 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       apiHelper.getOAuthToken(CACHE['access_token']),
       streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
     ]).then(result => {
-      // Both promises were fulfilled
+      // The access_token has been obtained and all records have been grouped by source
+      // Next, we need create a string from the record and nyplSource keys to perform a GET request
+      // to the ItemService
       CACHE['access_token'] = result[0];
-      const decodedKinesisData = result[1];
-
-      console.log(decodedKinesisData, CACHE);
+      const groupedRecordsBySource = apiHelper.groupRecordsBy(result[1], 'nyplSource');
+      const groupedRecordsWithApiUrl = apiHelper.setItemApiUrlToRecord(groupedRecordsBySource, 'https://api.nypltech.org/api/v0.1/items?id=');
+      console.log(groupedRecordsWithApiUrl);
     })
     .catch(error => {
       console.log('Error from Promise All', error);
