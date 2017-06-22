@@ -41,82 +41,84 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     if (!records) {
       throw HoldRequestConsumerError({
-        message: 'the records array parameter is not defined',
-        type: 'undefined-records-array-parameter',
+        message: 'the records object parameter is not defined',
+        type: 'undefined-records-object-parameter',
         function: functionName
       });
     }
 
-    if (!records.length) {
+    if (Object.keys(records).length === 0) {
       throw HoldRequestConsumerError({
-        message: 'the records array parameter is empty, could not iterate over records',
-        type: 'empty-records-array-parameter',
+        message: 'the records object parameter is empty, could not iterate over object keys',
+        type: 'empty-records-object-parameter',
         function: functionName
       });
     }
+
     // Create the Items API URL from the base URL
     const itemApiUrl = `${baseApiUrl}items?id=`;
     // Store a reference that will be re-assigned and concatenated
     let fullItemUrl = itemApiUrl;
-
-    // Iterate over the records array grouped by nyplSource
-    records.map((currentItem, i) => {
-      Object.keys(currentItem).forEach((key) => {
-        if (!currentItem[key].hasOwnProperty('data') || !currentItem[key]['data']) {
-          throw HoldRequestConsumerError({
-            message: `the decoded data object key is not defined for the ${key} source`,
-            type: 'undefined-object-property-data',
-            function: functionName,
-            error: { nyplSource: key, data: currentItem[key] }
-          });
-        }
-
-        const arrayOfDecodedRecords = currentItem[key]['data'];
-
-        if (typeof arrayOfDecodedRecords !== 'object' || !arrayOfDecodedRecords.length) {
-          throw HoldRequestConsumerError({
-            message: 'the decoded data object is empty',
-            type: 'empty-object-property-data',
-            function: functionName,
-            error: { nyplSource: key, data: arrayOfDecodedRecords }
-          });
-        }
-
-        Object.keys(arrayOfDecodedRecords).forEach((k) => {
-          // Verify the existence of the 'record' property
-          if (!arrayOfDecodedRecords[k].hasOwnProperty('record') || !arrayOfDecodedRecords[k].record) {
-            throw HoldRequestConsumerError({
-              message: 'the record object key within the decoded data is not defined',
-              type: 'empty-object-property-record',
-              function: functionName,
-              error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
-            });
-          }
-          // Append the record value (id) to url string
-          fullItemUrl += arrayOfDecodedRecords[k].record;
-          // Append a comma (,) to all except the last item
-          if (arrayOfDecodedRecords.length !== (parseInt(k) + 1)) {
-            fullItemUrl += ',';
-          }
+    // Iterate over the records object keys grouped by nyplSource
+    Object.keys(records).forEach((key) => {
+      if (!records[key].hasOwnProperty('data') || !records[key]['data']) {
+        throw HoldRequestConsumerError({
+          message: `the decoded data object key is not defined for the ${key} source`,
+          type: 'undefined-object-property-data',
+          function: functionName,
+          error: { nyplSource: key, data: records[key] }
         });
+      }
 
-        // Append the nyplSource to the end of the string
-        fullItemUrl += '&nyplSource=' + key;
+      const arrayOfDecodedRecords = records[key]['data'];
 
-        if (currentItem[key].hasOwnProperty('item-api') && currentItem[key]['item-api']) {
+      if (typeof arrayOfDecodedRecords !== 'object' || !arrayOfDecodedRecords.length) {
+        throw HoldRequestConsumerError({
+          message: 'the decoded data object is empty',
+          type: 'empty-object-property-data',
+          function: functionName,
+          error: { nyplSource: key, data: arrayOfDecodedRecords }
+        });
+      }
+
+      // Iterate over each record data to extract the record id
+      Object.keys(arrayOfDecodedRecords).forEach((k) => {
+        // Verify the existence of the 'record' property
+        if (!arrayOfDecodedRecords[k].hasOwnProperty('record') || !arrayOfDecodedRecords[k].record) {
           throw HoldRequestConsumerError({
-            message: 'the item-api object key within decodedData already exists',
-            type: 'existent-object-property-item-api',
+            message: 'the record object key within the decoded data is not defined',
+            type: 'empty-object-property-record',
             function: functionName,
-            error: { nyplSource: key, data: currentItem[key]['item-api'] }
+            error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
           });
         }
 
-        // Extend the source object to include the itemApiUrl
-        currentItem[key]['item-api'] = fullItemUrl;
-        // Reset the item URL for the next record
-        fullItemUrl = itemApiUrl;
+        // Append the record value (id) to url string
+        fullItemUrl += arrayOfDecodedRecords[k].record;
+
+        // Append a comma (,) to all except the last item
+        if (arrayOfDecodedRecords.length !== (parseInt(k) + 1)) {
+          fullItemUrl += ',';
+        }
       });
+
+      // Append the nyplSource to the end of the string
+      fullItemUrl += '&nyplSource=' + key;
+
+      if (records[key].hasOwnProperty('item-api') && records[key]['item-api']) {
+        throw HoldRequestConsumerError({
+          message: 'the item-api object key within decodedData already exists',
+          type: 'existent-object-property-item-api',
+          function: functionName,
+          error: { nyplSource: key, data: records[key]['item-api'] }
+        });
+      }
+
+      // Extend the source object to include the itemApiUrl
+      records[key]['item-api'] = fullItemUrl;
+
+      // Reset the item URL for the next record
+      fullItemUrl = itemApiUrl;
     });
 
     return records;
@@ -153,17 +155,13 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       });
     }
 
-    const groupedRecordsArray = [];
     const matchingRecordsObject = records.reduce((allRecords, record) => {
       allRecords[record[key]] = allRecords[record[key]] || { 'data': [] };
       allRecords[record[key]]['data'].push(record);
       return allRecords;
     }, {});
 
-    // Insert into array the grouped object
-    groupedRecordsArray.push(matchingRecordsObject);
-
-    return groupedRecordsArray;
+    return matchingRecordsObject;
   };
 
   this.getOAuthToken = (cachedToken) => {
