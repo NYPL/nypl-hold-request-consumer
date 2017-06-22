@@ -3,6 +3,7 @@ const NyplStreamsClient = require('@nypl/nypl-streams-client');
 const SCSBModel = require('./src/models/SCSBModel');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
+const logger = require('./src/helpers/Logger');
 const CACHE = {};
 
 if (process.env.NODE_ENV !== 'production') {
@@ -12,6 +13,8 @@ if (process.env.NODE_ENV !== 'production') {
 exports.kinesisHandler = (records, opts = {}, context) => {
   try {
     if (!opts.schema || opts.schema === '') {
+      // Testing Winston Logger
+      logger.log('info', 'testing logger', { 'jobId': '12345' });
       throw HoldRequestConsumerError({
         message: 'kinesisHandler(): missing schema name configuration parameter',
         type: 'missing-schema-name-parameter'
@@ -63,7 +66,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequestService', apiUri: 'https://api.nypltech.org/api/v0.1/' },
+      { schema: '', apiUri: 'https://api.nypltech.org/api/v0.1/' },
       context
     );
   }
