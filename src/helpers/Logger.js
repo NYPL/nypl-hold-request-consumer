@@ -19,7 +19,7 @@ const logger = new winston.Logger({
         }
 
         if (process.pid) {
-          result.pid = process.pid;
+          result.pid = process.pid.toString();
         }
 
         if (options.meta && Object.keys(options.meta).length) {
