@@ -6,22 +6,26 @@ const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError'
 const CACHE = {};
 
 if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: './config/oauth.env' });
+  require('dotenv').config({ path: './config/local.env' });
 };
 
 exports.kinesisHandler = (records, opts = {}, context) => {
+  const functionName = 'kinesisHandler';
+
   try {
     if (!opts.schema || opts.schema === '') {
       throw HoldRequestConsumerError({
-        message: 'kinesisHandler(): missing schema name configuration parameter',
-        type: 'missing-schema-name-parameter'
+        message: 'missing schema name configuration parameter',
+        type: 'missing-schema-name-parameter',
+        function: functionName
       });
     }
 
     if (!opts.apiUri || opts.apiUri === '') {
       throw HoldRequestConsumerError({
-        message: 'kinesisHandler(): missing apiUri configuration parameter',
-        type: 'missing-nypl-data-api-uri'
+        message: 'missing apiUri configuration parameter',
+        type: 'missing-nypl-data-api-uri',
+        function: functionName
       });
     }
 
@@ -47,7 +51,7 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       // to the ItemService
       CACHE['access_token'] = result[0];
       const groupedRecordsBySource = apiHelper.groupRecordsBy(result[1], 'nyplSource');
-      const groupedRecordsWithApiUrl = apiHelper.setItemApiUrlToRecord(groupedRecordsBySource, 'https://api.nypltech.org/api/v0.1/items?id=');
+      const groupedRecordsWithApiUrl = apiHelper.setItemApiUrlToRecord(groupedRecordsBySource, apiUri);
       console.log(groupedRecordsWithApiUrl);
     })
     .catch(error => {
@@ -65,7 +69,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequestService', apiUri: 'https://api.nypltech.org/api/v0.1/' },
+      { schema: 'HoldRequestService', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }

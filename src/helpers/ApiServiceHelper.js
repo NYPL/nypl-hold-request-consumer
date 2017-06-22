@@ -29,58 +29,67 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret === '' || this.scope === '') ? false : true;
   };
 
-  this.setItemApiUrlToRecord = (records, itemApiUrl) => {
-    if (!itemApiUrl || itemApiUrl === '') {
+  this.setItemApiUrlToRecord = (records, baseApiUrl) => {
+    const functionName = 'setItemApiUrlToRecord';
+    if (!baseApiUrl || baseApiUrl === '') {
       throw HoldRequestConsumerError({
-        message: 'setItemApiUrlToRecord(): the itemApiUrl is not defined or empty',
-        type: 'undefined-item-api-url-parameter'
+        message: 'the baseApiUrl parameter is not defined or empty',
+        type: 'undefined-item-api-url-parameter',
+        function: functionName
       });
     }
 
     if (!records) {
       throw HoldRequestConsumerError({
-        message: 'setItemApiUrlToRecord(): the records array is not defined',
-        type: 'undefined-records-array-parameter'
+        message: 'the records array parameter is not defined',
+        type: 'undefined-records-array-parameter',
+        function: functionName
       });
     }
 
     if (!records.length) {
       throw HoldRequestConsumerError({
-        message: 'setItemApiUrlToRecord(): the records array is empty',
-        type: 'empty-records-array-parameter'
+        message: 'the records array parameter is empty, could not iterate over records',
+        type: 'empty-records-array-parameter',
+        function: functionName
       });
     }
-
+    // Create the Items API URL from the base URL
+    const itemApiUrl = `${baseApiUrl}items?id=`;
+    // Store a reference that will be re-assigned and concatenated
     let fullItemUrl = itemApiUrl;
 
     // Iterate over the records array grouped by nyplSource
     records.map((currentItem, i) => {
       Object.keys(currentItem).forEach((key) => {
-        if (!currentItem[key].hasOwnProperty('decodedData')) {
+        if (!currentItem[key].hasOwnProperty('data') || !currentItem[key]['data']) {
           throw HoldRequestConsumerError({
-            message: 'setItemApiUrlToRecord(): the decodedData object key is not defined',
-            type: 'undefined-object-property-decoded-data',
-            details: currentItem[key]
+            message: `the decoded data object key is not defined for the ${key} source`,
+            type: 'undefined-object-property-data',
+            function: functionName,
+            error: { nyplSource: key, data: currentItem[key] }
           });
         }
 
-        const arrayOfDecodedRecords = currentItem[key]['decodedData'];
+        const arrayOfDecodedRecords = currentItem[key]['data'];
 
-        if (typeof arrayOfDecodedRecords !== 'object' && !arrayOfDecodedRecords.length) {
+        if (typeof arrayOfDecodedRecords !== 'object' || !arrayOfDecodedRecords.length) {
           throw HoldRequestConsumerError({
-            message: 'setItemApiUrlToRecord(): the decodedData object is empty',
-            type: 'empty-object-property-decoded-data',
-            details: arrayOfDecodedRecords
+            message: 'the decoded data object is empty',
+            type: 'empty-object-property-data',
+            function: functionName,
+            error: { nyplSource: key, data: arrayOfDecodedRecords }
           });
         }
 
         Object.keys(arrayOfDecodedRecords).forEach((k) => {
           // Verify the existence of the 'record' property
-          if (!arrayOfDecodedRecords[k].hasOwnProperty('record')) {
+          if (!arrayOfDecodedRecords[k].hasOwnProperty('record') || !arrayOfDecodedRecords[k].record) {
             throw HoldRequestConsumerError({
-              message: 'setItemApiUrlToRecord(): the record object key within decodedData is not defined',
+              message: 'the record object key within the decoded data is not defined',
               type: 'empty-object-property-record',
-              details: arrayOfDecodedRecords[k]
+              function: functionName,
+              error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
             });
           }
           // Append the record value (id) to url string
@@ -94,15 +103,19 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         // Append the nyplSource to the end of the string
         fullItemUrl += '&nyplSource=' + key;
 
-        if (currentItem[key].hasOwnProperty('itemApiUrl')) {
+        if (currentItem[key].hasOwnProperty('item-api') && currentItem[key]['item-api']) {
           throw HoldRequestConsumerError({
-            message: 'setItemApiUrlToRecord(): the itemApiUrl object key within decodedData already exists',
-            type: 'existent-object-property-item-api-url'
+            message: 'the item-api object key within decodedData already exists',
+            type: 'existent-object-property-item-api',
+            function: functionName,
+            error: { nyplSource: key, data: currentItem[key]['item-api'] }
           });
         }
 
         // Extend the source object to include the itemApiUrl
-        currentItem[key]['itemApiUrl'] = fullItemUrl;
+        currentItem[key]['item-api'] = fullItemUrl;
+        // Reset the item URL for the next record
+        fullItemUrl = itemApiUrl;
       });
     });
 
@@ -114,33 +127,39 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   };
 
   this.groupRecordsBy = (records, key) => {
+    const functionName = 'groupRecordsBy';
+
     if (!records) {
       throw HoldRequestConsumerError({
-        message: 'groupRecordsBy(): the records array is not defined',
-        type: 'undefined-records-array-parameter'
+        message: 'the records array is not defined',
+        type: 'undefined-records-array-parameter',
+        function: functionName
       });
     }
 
     if (!records.length) {
       throw HoldRequestConsumerError({
-        message: 'groupRecordsBy(): the records array is empty',
-        type: 'empty-records-array-parameter'
+        message: 'the records array is empty',
+        type: 'empty-records-array-parameter',
+        function: functionName
       });
     }
 
     if (!key || key === '') {
       throw HoldRequestConsumerError({
-        message: 'groupRecordsBy(): the key parameter is not defined or empty',
-        type: 'undefined-key-parameter'
+        message: 'the key parameter is not defined or empty',
+        type: 'undefined-key-parameter',
+        function: functionName
       });
     }
 
     const groupedRecordsArray = [];
     const matchingRecordsObject = records.reduce((allRecords, record) => {
-      allRecords[record[key]] = allRecords[record[key]] || { 'decodedData': [] };
-      allRecords[record[key]]['decodedData'].push(record);
+      allRecords[record[key]] = allRecords[record[key]] || { 'data': [] };
+      allRecords[record[key]]['data'].push(record);
       return allRecords;
     }, {});
+
     // Insert into array the grouped object
     groupedRecordsArray.push(matchingRecordsObject);
 
@@ -148,6 +167,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   };
 
   this.getOAuthToken = (cachedToken) => {
+    const functionName = 'getOAuthToken';
     const authConfig = {
       client_id: this.clientId,
       client_secret: this.clientSecret,
@@ -157,8 +177,9 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     if (!this.areRequiredParamsValid()) {
       return Promise.reject(HoldRequestConsumerError({
-          message: 'getOAuthToken(): OAuth required parameters are not defined',
-          type: 'constructor-required-params-missing'
+          message: 'OAuth required parameters are not defined',
+          type: 'missing-constructor-required-params',
+          function: functionName
         })
       );
     }
@@ -172,8 +193,43 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
         // We obtained a valid response. However, we could not get a value from access_token
         return Promise.reject(HoldRequestConsumerError({
-            message: 'getOAuthToken(): Missing access_token value from OAuth Service',
-            type: 'missing-oauth-access-token'
+            message: 'missing access_token value from OAuth Service',
+            type: 'missing-access-token-from-oauth-service',
+            function: functionName
+          })
+        );
+      })
+      .catch((error) => {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          return Promise.reject(HoldRequestConsumerError({
+              message: 'received a status outside of the 2xx range',
+              type: 'oauth-service-error',
+              status: error.response.status,
+              function: functionName,
+              error : { headers: error.response.headers, data: error.response.data }
+            })
+          );
+        }
+
+        if (error.request) {
+          // The request was made but no response was received
+          return Promise.reject(HoldRequestConsumerError({
+              message: 'request was made, no response from OAuth Service',
+              type: 'oauth-service-error',
+              status: 500,
+              function: functionName,
+              error : error.request
+            })
+          );
+        }
+
+        return Promise.reject(HoldRequestConsumerError({
+            message: error.message,
+            type: 'oauth-service-error',
+            status: 500,
+            function: functionName
           })
         );
       })
