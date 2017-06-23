@@ -51,7 +51,7 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       // to the ItemService
       CACHE['access_token'] = result[0];
       const groupedRecordsBySource = apiHelper.groupRecordsBy(result[1], 'nyplSource');
-      const groupedRecordsWithApiUrl = apiHelper.setItemApiUrlToRecord(groupedRecordsBySource, apiUri);
+      const groupedRecordsWithApiUrl = apiHelper.generateRecordApiUrlsArray(groupedRecordsBySource, apiUri);
       console.log(groupedRecordsWithApiUrl);
     })
     .catch(error => {

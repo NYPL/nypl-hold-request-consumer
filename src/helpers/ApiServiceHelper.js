@@ -29,7 +29,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret === '' || this.scope === '') ? false : true;
   };
 
-  this.setItemApiUrlToRecord = (records, baseApiUrl) => {
+  this.generateRecordApiUrlsArray = (records, baseApiUrl) => {
     const functionName = 'setItemApiUrlToRecord';
     if (!baseApiUrl || baseApiUrl === '') {
       throw HoldRequestConsumerError({
@@ -56,10 +56,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     // Create the Items API URL from the base URL
-    const itemApiUrl = `${baseApiUrl}items?id=`;
+    const itemApiUrlBase = `${baseApiUrl}items?id=`;
+    const patronBarcodeApiUrlBase = `${baseApiUrl}patrons`;
     const itemApiUrlsArray = [];
     // Store a reference that will be re-assigned and concatenated
-    let fullItemUrl = itemApiUrl;
+    let itemApiUrl = itemApiUrlBase;
+    let patronBarcodeApiUrl = '';
     // Iterate over the records object keys grouped by nyplSource
     Object.keys(records).forEach((key) => {
       const arrayOfDecodedRecords = records[key];
@@ -85,25 +87,37 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           });
         }
 
+        // Verify the existence of the 'record' property
+        if (!arrayOfDecodedRecords[k].hasOwnProperty('patron') || !arrayOfDecodedRecords[k].patron) {
+          throw HoldRequestConsumerError({
+            message: 'the patron object key within the patron id is not defined',
+            type: 'empty-object-property-patron',
+            function: functionName,
+            error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
+          });
+        }
+        // Generate patron barcode url
+        patronBarcodeApiUrl = `${patronBarcodeApiUrlBase}/${arrayOfDecodedRecords[k].patron}/barcode`;
+
         // Append the record value (id) to url string
-        fullItemUrl += arrayOfDecodedRecords[k].record;
+        itemApiUrl += arrayOfDecodedRecords[k].record;
 
         // Append a comma (,) to all except the last item
         if (arrayOfDecodedRecords.length !== (parseInt(k) + 1)) {
-          fullItemUrl += ',';
+          itemApiUrl += ',';
         }
       });
-
       // Append the nyplSource to the end of the string
-      fullItemUrl += '&nyplSource=' + key;
+      itemApiUrl += '&nyplSource=' + key;
       // Add the Item API Url and data to final array
       itemApiUrlsArray.push({
         'nyplSource': key,
-        'itemApiUrl': fullItemUrl,
+        'itemApiUrl': itemApiUrl,
+        'patronBarcodeApiUrl': patronBarcodeApiUrl,
         'data': arrayOfDecodedRecords
       });
       // Reset the item URL for the next record
-      fullItemUrl = itemApiUrl;
+      itemApiUrl = itemApiUrlBase;
     });
 
     return itemApiUrlsArray;
