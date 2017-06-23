@@ -1,8 +1,8 @@
 /* eslint-disable semi */
 const NyplStreamsClient = require('@nypl/nypl-streams-client');
-const SCSBModel = require('./src/models/SCSBModel');
-const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
+const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
+const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const CACHE = {};
 
 if (process.env.NODE_ENV !== 'production') {
@@ -41,6 +41,7 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       process.env.OAUTH_CLIENT_SECRET,
       process.env.OAUTH_PROVIDER_SCOPE
     );
+    const holdRequestConsumerModel = new HoldRequestConsumerModel();
 
     Promise.all([
       apiHelper.getOAuthToken(CACHE['access_token']),
@@ -50,7 +51,10 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       // Next, we need create a string from the record and nyplSource keys to perform a GET request
       // to the ItemService
       CACHE['access_token'] = result[0];
-      const groupedRecordsBySource = apiHelper.groupRecordsBy(result[1], 'nyplSource');
+      // Save the decoded records to the Model Object
+      holdRequestConsumerModel.setRecords(result[1]);
+
+      const groupedRecordsBySource = apiHelper.groupRecordsBy(holdRequestConsumerModel.getRecords(), 'nyplSource');
       const groupedRecordsWithApiUrl = apiHelper.generateRecordApiUrlsArray(groupedRecordsBySource, apiUri);
       console.log(groupedRecordsWithApiUrl);
     })
