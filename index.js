@@ -1,27 +1,31 @@
 /* eslint-disable semi */
 const NyplStreamsClient = require('@nypl/nypl-streams-client');
-const SCSBModel = require('./src/models/SCSBModel');
-const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
+const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
+const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const CACHE = {};
 
 if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: './config/oauth.env' });
+  require('dotenv').config({ path: './config/local.env' });
 };
 
 exports.kinesisHandler = (records, opts = {}, context) => {
+  const functionName = 'kinesisHandler';
+
   try {
     if (!opts.schema || opts.schema === '') {
       throw HoldRequestConsumerError({
-        message: 'kinesisHandler(): missing schema name configuration parameter',
-        type: 'missing-schema-name-parameter'
+        message: 'missing schema name configuration parameter',
+        type: 'missing-schema-name-parameter',
+        function: functionName
       });
     }
 
     if (!opts.apiUri || opts.apiUri === '') {
       throw HoldRequestConsumerError({
-        message: 'kinesisHandler(): missing apiUri configuration parameter',
-        type: 'missing-nypl-data-api-uri'
+        message: 'missing apiUri configuration parameter',
+        type: 'missing-nypl-data-api-uri',
+        function: functionName
       });
     }
 
@@ -37,16 +41,22 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       process.env.OAUTH_CLIENT_SECRET,
       process.env.OAUTH_PROVIDER_SCOPE
     );
+    const holdRequestConsumerModel = new HoldRequestConsumerModel();
 
     Promise.all([
       apiHelper.getOAuthToken(CACHE['access_token']),
       streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
     ]).then(result => {
-      // Both promises were fulfilled
+      // The access_token has been obtained and all records have been grouped by source
+      // Next, we need create a string from the record and nyplSource keys to perform a GET request
+      // to the ItemService
       CACHE['access_token'] = result[0];
-      const decodedKinesisData = result[1];
+      // Save the decoded records to the Model Object
+      holdRequestConsumerModel.setRecords(result[1]);
 
-      console.log(decodedKinesisData, CACHE);
+      const groupedRecordsBySource = apiHelper.groupRecordsBy(holdRequestConsumerModel.getRecords(), 'nyplSource');
+      const groupedRecordsWithApiUrl = apiHelper.generateRecordApiUrlsArray(groupedRecordsBySource, apiUri);
+      console.log(groupedRecordsWithApiUrl);
     })
     .catch(error => {
       console.log('Error from Promise All', error);
@@ -63,7 +73,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequestService', apiUri: 'https://api.nypltech.org/api/v0.1/' },
+      { schema: 'HoldRequestService', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }
