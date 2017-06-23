@@ -25,7 +25,7 @@ Once all dependencies are installed, you want to run the following NPM commands 
 > Copies the sample .env file under ./sample/.env.sample into ./.env
 
 ```console
-$ npm run setup-env
+$ npm run setup-node-lambda-env
 ```
 
 #### Step 2: Add your AWS environment variables
@@ -52,14 +52,25 @@ PACKAGE_DIRECTORY=build
 ```
 
 #### Step 3: Setup your environment specific `{environment}.env` file
+
 Running the following NPM Commands will:
+
+* Set up your **LOCAL** `.env` file as `./config/local.env` used for local development
+```console
+$ npm run setup-local-env // Used in local development when running `npm run local-run`
+```
+
+* Set up your **DEVELOPMENT** `.env` file as `./config/dev.env`
+```console
+$ npm run setup-dev-env
+```
 
 * Set up your **QA** `.env` file as `./config/qa.env`
 ```console
 $ npm run setup-qa-env
 ```
 
-* Set up your **Production** `.env` file as `./config/prod.env`
+* Set up your **PRODUCTION** `.env` file as `./config/prod.env`
 ```console
 $ npm run setup-prod-env
 ```
@@ -73,12 +84,17 @@ You **must** edit the file once created and add your specific **EventSourceArn**
 
 Running the following NPM Commands will:
 
+* Set up your **DEVELOPMENT** `event_sources_dev.json` file in `./config/`
+```console
+$ npm run setup-dev-sources
+```
+
 * Set up your **QA** `event_sources_qa.json` file in `./config/`
 ```console
 $ npm run setup-qa-sources
 ```
 
-* Set up your **Production** `event_sources_prod.json` file in `./config/`
+* Set up your **PRODUCTION** `event_sources_prod.json` file in `./config/`
 ```console
 $ npm run setup-prod-sources
 ```
@@ -88,18 +104,25 @@ To deploy your Lambda function via the `node-lambda` module __**ensure**__ you h
 
 The following NPM Commands will execute the `node-lambda deploy` command mapping configurations to the proper environments (qa & production). These commands can be modified in `package.json`.
 
-* Deploys to **QA**
+* Runs `node-lambda deploy` with **DEVELOPMENT** configurations
+```console
+$ npm run deploy-dev
+```
+
+* Runs `node-lambda deploy` with **QA** configurations
 ```console
 $ npm run deploy-qa
 ```
 
-* Deploys to **Production**
+* Runs `node-lambda deploy` with **PRODUCTION** configurations
 ```console
 $ npm run deploy-prod
 ```
 
 ### Developing Locally
 To develop and run your Lambda locally you must ensure to complete `Step 1` and `Step 2` of the Setup process.
+
+***REMINDER:*** Your `./config/local.env` and `./.env` environment variables ***MUST*** be configured in order for the next step to work.
 
 Next, run the following NPM command to use the **sample** event found in `./sample/sample_event.json`.
 
