@@ -57,25 +57,17 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     // Create the Items API URL from the base URL
     const itemApiUrl = `${baseApiUrl}items?id=`;
+    const itemApiUrlsArray = [];
     // Store a reference that will be re-assigned and concatenated
     let fullItemUrl = itemApiUrl;
     // Iterate over the records object keys grouped by nyplSource
     Object.keys(records).forEach((key) => {
-      if (!records[key].hasOwnProperty('data') || !records[key]['data']) {
-        throw HoldRequestConsumerError({
-          message: `the decoded data object key is not defined for the ${key} source`,
-          type: 'undefined-object-property-data',
-          function: functionName,
-          error: { nyplSource: key, data: records[key] }
-        });
-      }
-
-      const arrayOfDecodedRecords = records[key]['data'];
+      const arrayOfDecodedRecords = records[key];
 
       if (typeof arrayOfDecodedRecords !== 'object' || !arrayOfDecodedRecords.length) {
         throw HoldRequestConsumerError({
-          message: 'the decoded data object is empty',
-          type: 'empty-object-property-data',
+          message: 'the decoded data array is empty',
+          type: 'empty-decoded-data-array',
           function: functionName,
           error: { nyplSource: key, data: arrayOfDecodedRecords }
         });
@@ -86,7 +78,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         // Verify the existence of the 'record' property
         if (!arrayOfDecodedRecords[k].hasOwnProperty('record') || !arrayOfDecodedRecords[k].record) {
           throw HoldRequestConsumerError({
-            message: 'the record object key within the decoded data is not defined',
+            message: 'the record object key within the item id is not defined',
             type: 'empty-object-property-record',
             function: functionName,
             error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
@@ -104,24 +96,17 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
       // Append the nyplSource to the end of the string
       fullItemUrl += '&nyplSource=' + key;
-
-      if (records[key].hasOwnProperty('item-api') && records[key]['item-api']) {
-        throw HoldRequestConsumerError({
-          message: 'the item-api object key within decodedData already exists',
-          type: 'existent-object-property-item-api',
-          function: functionName,
-          error: { nyplSource: key, data: records[key]['item-api'] }
-        });
-      }
-
-      // Extend the source object to include the itemApiUrl
-      records[key]['item-api'] = fullItemUrl;
-
+      // Add the Item API Url and data to final array
+      itemApiUrlsArray.push({
+        'nyplSource': key,
+        'itemApiUrl': fullItemUrl,
+        'data': arrayOfDecodedRecords
+      });
       // Reset the item URL for the next record
       fullItemUrl = itemApiUrl;
     });
 
-    return records;
+    return itemApiUrlsArray;
   };
 
   this.getItemData = (records, apiUrl) => {
@@ -156,8 +141,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     const matchingRecordsObject = records.reduce((allRecords, record) => {
-      allRecords[record[key]] = allRecords[record[key]] || { 'data': [] };
-      allRecords[record[key]]['data'].push(record);
+      allRecords[record[key]] = allRecords[record[key]] || [];
+      allRecords[record[key]].push(record);
       return allRecords;
     }, {});
 
