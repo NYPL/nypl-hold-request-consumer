@@ -16,7 +16,7 @@ exports.kinesisHandler = (records, opts = {}, context) => {
   try {
     if (!opts.schema || opts.schema === '') {
       // Testing Winston Logger
-      logger.log('info', 'testing logger', { 'jobId': '12345' });
+      logger.error('testing logger', { 'jobId': '12345' });
       throw HoldRequestConsumerError({
         message: 'missing schema name configuration parameter',
         type: 'missing-schema-name-parameter',
@@ -76,7 +76,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequestService', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: '', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }
