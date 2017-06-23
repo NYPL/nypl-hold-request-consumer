@@ -5,7 +5,7 @@
         "kinesisSchemaVersion": "1.0",
         "partitionKey": "s1",
         "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
-        "data": "AEg5MzA4ZDMxMi0zZWQ0LTQ2ZjEtOWJiNS1iNjMyMjFjYzVjNjEOMTgzODk4MhRyZWNhcC1ueXBsADIyMDE3LTA2LTEzVDEzOjU1OjI3LTA0OjAwAgAACGhvbGQCaRAxNzM4ODE3NgAIc2FzYgAyMjAxNi0wMS0wN1QwMjozMjo1MSswMDowMAACAgIAIHVzZXJAZXhhbXBsZS5jb20AFkNoYXB0ZXIgT25lAAYxNTkAFlN1bW1lciAyMDE3AAYxMDAABjE1MA==",
+        "data": "kgFIMDYwZWZiYjAtOTQ3My00ZjlhLWFiYTQtYmFhMmYzYmM0MmNmEDY3NzkzNjY2FnNpZXJyYS1ueXBsADIyMDE3LTA2LTIyVDExOjA3OjM3LTA0OjAwAgAACGhvbGQCaRAxMzE1MzMyNwAIc2FzYgAyMjAxNi0wMS0wN1QwMjozMjo1MSswMDowMAACAgICAgICAgI=",
         "approximateArrivalTimestamp": 1428537600
       },
       "eventSource": "aws:kinesis",
@@ -14,7 +14,119 @@
       "eventName": "aws:kinesis:record",
       "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
       "awsRegion": "us-east-1",
-      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/Bib"
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "kAFIYTdmY2Y5N2MtZjBiNi00OGY0LWJjMjYtNGRlNTE5MGFlMzYxEDY3NzkzNjY2FnNpZXJyYS1ueXBsADIyMDE3LTA2LTIyVDExOjA3OjExLTA0OjAwAgAACGhvbGQCaRAxMTA2NDI4OAAIc2FzYgAyMjAxNi0wMS0wN1QwMjozMjo1MSswMDowMAACAgICAgICAgI=",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "jgFIYjY3ZDg2MmItMmIzMi00NDVhLWJjODMtZGQ1MjVjZTMwYWU5EDY3NzkzNjY2FnNpZXJyYS1ueXBsADIyMDE3LTA2LTIyVDExOjA2OjQwLTA0OjAwAgAACGhvbGQCaRAxMDAxMDY2MgAIc2FzYgAyMjAxNi0wMS0wN1QwMjozMjo1MSswMDowMAACAgICAgICAgI=",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "jAFIZGYyOTM0OTAtM2Y2Mi00NzU3LThjNzctMmQ2M2ZiMjA4MTYzEDY3NzkzNjY2FnNpZXJyYS1ueXBsADIyMDE3LTA2LTIyVDExOjA2OjA5LTA0OjAwAgAACGhvbGQCaRAxMDAxMTA4NQAIc2FzYgAyMjAxNi0wMS0wN1QwMjozMjo1MSswMDowMAACAgICAgICAgI=",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "igFIZWI0ODE3YzgtMzRhNy00MjBjLTk3ZTgtOTY2MTIxMmRhY2ZhEDY3NzkzNjY2EnJlY2FwLXB1bAAyMjAxNy0wNi0yMlQxMTowNTozMy0wNDowMAIAAAhob2xkAmkMMTAwMDUyAAhzYXNiADIyMDE2LTAxLTA3VDAyOjMyOjUxKzAwOjAwAAICAgICAgICAg==",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "iAFIY2YyMjk3MmUtZmI4Zi00MjM3LTk3OTQtZGU4ZGRhMTY4MzZiEDY3NzkzNjY2EnJlY2FwLXB1bAAyMjAxNy0wNi0yMlQxMTowNTowMi0wNDowMAIAAAhob2xkAmkMMTAwMDI3AAhzYXNiADIyMDE2LTAxLTA3VDAyOjMyOjUxKzAwOjAwAAICAgICAgICAg==",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "hgFIM2NhMjEyNjctNDBkZC00YzQ1LTgxNWUtZGVhY2Y1NTRkNDUxEDY3NzkzNjY2EnJlY2FwLWN1bAAyMjAxNy0wNi0yMlQxMTowNDoyNC0wNDowMAIAAAhob2xkAmkMMzAyNjk2AAhzYXNiADIyMDE2LTAxLTA3VDAyOjMyOjUxKzAwOjAwAAICAgICAgICAg==",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "hAFINjA1YTQ3YmItZjQ4NS00Y2U3LWEyODUtYWQxMzdmZGZiNWRlEDY3NzkzNjY2EnJlY2FwLWN1bAAyMjAxNy0wNi0yMlQxMTowMzo0My0wNDowMAIAAAhob2xkAmkMMzAwMTM1AAhzYXNiADIyMDE2LTAxLTA3VDAyOjMyOjUxKzAwOjAwAAICAgICAgICAg==",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
     }
   ]
 }
