@@ -89,7 +89,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: '', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: 'HoldRequestService', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }
