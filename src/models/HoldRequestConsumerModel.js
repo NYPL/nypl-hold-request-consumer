@@ -61,7 +61,7 @@ function HoldRequestConsumerModel(records) {
     }
 
     const mergedRecords = _.map(initialRecords, function(item) {
-      const matchedRecord = _.find(updatedRecords, { id: item.record, 'nyplSource': item.nyplSource });
+      const matchedRecord = _.find(updatedRecords, { id: item.record, nyplSource: item.nyplSource });
       return _.extend(item, { 'item': matchedRecord });
     });
 
