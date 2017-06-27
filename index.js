@@ -29,9 +29,6 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       });
     }
 
-    // Required parameters are valid execute the following:
-    // 1) Obtain the decoded kinesis data
-    // 2) Obtain a valid OAuth token to process record data
     const schema = opts.schema;
     const apiUri = opts.apiUri;
     const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: apiUri });
@@ -41,29 +38,45 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       process.env.OAUTH_CLIENT_SECRET,
       process.env.OAUTH_PROVIDER_SCOPE
     );
-    const holdRequestConsumerModel = new HoldRequestConsumerModel();
+    const hrcModel = new HoldRequestConsumerModel();
 
     Promise.all([
       apiHelper.getOAuthToken(CACHE['access_token']),
       streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
     ]).then(result => {
-      // The access_token has been obtained and all records have been grouped by source
-      // Next, we need create a string from the record and nyplSource keys to perform a GET request
-      // to the ItemService
       CACHE['access_token'] = result[0];
       // Save the decoded records to the Model Object
-      holdRequestConsumerModel.setRecords(result[1]);
-
-      const groupedRecordsBySource = apiHelper.groupRecordsBy(holdRequestConsumerModel.getRecords(), 'nyplSource');
-      const groupedRecordsWithApiUrl = apiHelper.generateRecordApiUrlsArray(groupedRecordsBySource, apiUri);
-      console.log(groupedRecordsWithApiUrl);
+      hrcModel.setRecords(result[1]);
+      return apiHelper.generateRecordApiUrlsArray(hrcModel.getRecords(), apiUri);
+    })
+    .then(apiUrlsArray => {
+      hrcModel.setApiUrlsArray(apiUrlsArray);
+      return apiHelper.processBatchRequest(hrcModel.getApiUrlsArray(), CACHE['access_token'], 'itemApi');
+    })
+    .then(recordsWithItemData => {
+      return hrcModel.mergeRecordsBySourceAndRecordId(hrcModel.getRecords(), recordsWithItemData);
+    })
+    .then(updatedRecordsWithItemData => {
+      hrcModel.setRecords(updatedRecordsWithItemData);
+      console.log(hrcModel.getRecords()[0]);
+      // return apiHelper.processBatchRequest(hrcModel.getApiUrlsArray(), CACHE['access_token'], 'patronBarcodeApi');
+    })
+    .then(recordsWithPatronBarcode => {
+      // console.log(recordsWithPatronBarcode);
     })
     .catch(error => {
-      console.log('Error from Promise All', error);
-    });
+      console.log('PROMISE CHAIN CATCH:', error);
+      // Handling Errors From Promise Chain
+      if (error.status === 403) {
+        // Handle Forbidden Errors
+      }
 
+      if (error.status === 401) {
+        // Handle OAuth Token refresh
+      }
+    });
   } catch (error) {
-    console.log(error);
+    console.log('CATCH ALL BLOCK:', error);
   }
 };
 
