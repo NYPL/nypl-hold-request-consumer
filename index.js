@@ -15,8 +15,6 @@ exports.kinesisHandler = (records, opts = {}, context) => {
 
   try {
     if (!opts.schema || opts.schema === '') {
-      // Testing Winston Logger
-      // logger.error('testing logger', { 'jobId': '12345' });
       throw HoldRequestConsumerError({
         message: 'missing schema name configuration parameter',
         type: 'missing-schema-name-parameter',
@@ -34,6 +32,7 @@ exports.kinesisHandler = (records, opts = {}, context) => {
 
     const schema = opts.schema;
     const apiUri = opts.apiUri;
+    const hrcModel = new HoldRequestConsumerModel();
     const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: apiUri });
     const apiHelper = new ApiServiceHelper(
       process.env.OAUTH_PROVIDER_URL,
@@ -41,7 +40,6 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       process.env.OAUTH_CLIENT_SECRET,
       process.env.OAUTH_PROVIDER_SCOPE
     );
-    const hrcModel = new HoldRequestConsumerModel();
 
     Promise.all([
       apiHelper.getOAuthToken(CACHE['access_token']),
@@ -78,7 +76,10 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       }
     });
   } catch (error) {
-    console.log('CATCH ALL BLOCK:', error);
+    logger.error(
+      error.message,
+      { type: error.type, function: error.function }
+    );
   }
 };
 
@@ -88,7 +89,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequest-alpha', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: 'HoldRequest', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }

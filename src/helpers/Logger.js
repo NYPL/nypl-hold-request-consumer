@@ -38,9 +38,9 @@ const logger = new winston.Logger({
         }
 
         if (options.meta && Object.keys(options.meta).length) {
-          if (options.meta.jobId) {
-            result.jobId = options.meta.jobId;
-            delete options.meta.jobId;
+          if (options.meta.holdRequestId) {
+            result.holdRequestId = options.meta.holdRequestId;
+            delete options.meta.holdRequestId;
           }
 
           if (options.meta && Object.keys(options.meta).length) {

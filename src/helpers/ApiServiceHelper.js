@@ -30,6 +30,157 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret === '' || this.scope === '') ? false : true;
   };
 
+  this.processGetItemDataRequests = (itemsArray, token) => {
+    const functionName = 'processGetItemDataRequests';
+
+    return new Promise((resolve, reject) => {
+      async.map(itemsArray, (urlItem, cb) => {
+        return axios.get(urlItem.itemApi, this.constructApiHeaders(token))
+        .then(response => {
+          if (response.data && response.data.data) {
+            cb(null, response.data.data);
+          }
+        })
+        .catch((error) => cb(error));
+      }, (err, results) => {
+        if (err) {
+          let errorResponse = {
+            type: 'item-service-api',
+            function: functionName
+          };
+
+          if (err.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: 'received a status outside of the 2xx range from Item Service',
+              status: err.response.status,
+              error : {
+                method: err.response.request.method,
+                url: err.response.request.path,
+                headers: err.response.headers,
+                data: err.response.data
+              }
+            }));
+          } else if (err.request) {
+            // The request was made but no response was received
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: 'request was made, no response from Item Service',
+              status: 500,
+              error : err.request
+            }));
+          } else {
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: err.message || 'an error occured from Item Service',
+              status: 500,
+              error: err,
+            }));
+          }
+          // Reject the promise with the proper HRC Error
+          reject(errorResponse);
+        } else {
+          // Merge two-dimensional array
+          const mergedArrayResults = [].concat.apply([], results);
+          resolve(mergedArrayResults);
+        }
+      });
+    });
+  };
+
+  this.processGetPatronBarcodeRequests = (itemsArray, token, baseApiUrl) => {
+    const functionName = 'processGetPatronBarcodeRequests';
+    // Only require the baseApiUrl to concatenate the patronBarcodeApi
+    if (!baseApiUrl || baseApiUrl === '') {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: `the baseApiUrl parameter is not defined or empty for type: ${type}`,
+          type: 'undefined-base-api-url-parameter',
+          function: functionName
+        })
+      );
+    }
+
+    return new Promise((resolve, reject) => {
+      async.map(itemsArray, (item, callback) => {
+        // Only process GET requests if the patron value is defined
+        if (item.patron && item.patron !== '') {
+          const patronBarcodeApi = `${baseApiUrl}patrons/${item.patron}/barcode`;
+          return axios.get(patronBarcodeApi, this.constructApiHeaders(token))
+          .then(response => {
+            if (response.data && response.data.data) {
+              item['patronInfo'] = response.data.data;
+              callback(null, item);
+            } else {
+              callback({
+                holdRequestId: item.id,
+                status: 404,
+                type: 'missing-response-data',
+                message: 'unable to assign the patronInfo key to record. Did not obtain a response.data.data value.'
+              });
+            }
+          })
+          .catch((error) => {
+            // TODO: LOG ERROR
+            callback(Object.assign({}, error, { holdRequestId: item.id }));
+          });
+        } else {
+          callback(
+            HoldRequestConsumerError({
+              message: 'could not generate a patron barcode API url; undefined or empty patron value',
+              type: 'missing-patron-key-value',
+              status: 404,
+              holdRequestId: item.id,
+              error : {
+                data: item,
+              }
+            })
+          );
+        }
+      }, (err, results) => {
+        // Handle the appropriate error for each result
+        if (err) {
+          let errorResponse = Object.assign({}, {
+            type: 'patron-service-api',
+            function: functionName,
+          }, err);
+
+          if (err.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: 'received a status outside of the 2xx range from Patron Service',
+              status: err.response.status,
+              error : {
+                method: err.response.request.method,
+                url: err.response.request.path,
+                headers: err.response.headers,
+                data: err.response.data
+              }
+            }));
+          } else if (err.request) {
+            // The request was made but no response was received
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: 'request was made, no response from Patron Service',
+              status: 500,
+              error : err.request
+            }));
+          } else {
+            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+              message: err.message,
+              status: err.status || 500,
+              error: err.error
+            }));
+          }
+          // Reject the promise with the proper HRC Error
+          reject(errorResponse);
+        } else {
+          const mergedArrayResults = [].concat.apply([], results);
+          resolve(mergedArrayResults);
+        }
+      });
+    });
+  };
+
   this.processBatchRequest = (itemsArray, token, type, baseApiUrl) => {
     const functionName = 'processBatchRequest';
     if (!token || token === '') {
@@ -62,159 +213,13 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-    return new Promise(function (resolve, reject) {
-      if (type === 'itemApi') {
-        async.map(itemsArray, function(urlItem, cb) {
-          return axios.get(urlItem.itemApi,
-            { headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-              }
-            }
-          )
-          .then(response => {
-            if (response.data && response.data.data) {
-              cb(null, response.data.data);
-            }
-          })
-          .catch((error) => cb(error));
-        }, (err, results) => {
-          if (err) {
-            let errorResponse = {
-              type: 'item-service-api',
-              function: functionName
-            };
+    if (type === 'itemApi') {
+      return this.processGetItemDataRequests(itemsArray, token);
+    }
 
-            if (err.response) {
-              // The request was made and the server responded with a status code
-              // that falls out of the range of 2xx
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: 'received a status outside of the 2xx range from Item Service',
-                status: err.response.status,
-                error : {
-                  method: err.response.request.method,
-                  url: err.response.request.path,
-                  headers: err.response.headers,
-                  data: err.response.data
-                }
-              }));
-            } else if (err.request) {
-              // The request was made but no response was received
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: 'request was made, no response from Item Service',
-                status: 500,
-                error : err.request
-              }));
-            } else {
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: err.message || 'an error occured from Item Service',
-                status: 500,
-                error: err,
-              }));
-            }
-            // Reject the promise with the proper HRC Error
-            reject(errorResponse);
-          } else {
-            // Merge two-dimensional array
-            const mergedArrayResults = [].concat.apply([], results);
-            resolve(mergedArrayResults);
-          }
-        });
-      }
-
-      if (type === 'patronBarcodeApi') {
-        // Only require the baseApiUrl to concatenate the patronBarcodeApi
-        if (!baseApiUrl || baseApiUrl === '') {
-          reject(
-            HoldRequestConsumerError({
-              message: `the baseApiUrl parameter is not defined or empty for type: ${type}`,
-              type: 'undefined-base-api-url-parameter',
-              function: functionName
-            })
-          );
-        }
-
-        async.map(itemsArray, function(item, callback) {
-          if (item.patron && item.patron !== '') {
-            const patronBarcodeApi = `${baseApiUrl}patrons/${item.patron}/barcode`;
-            return axios.get(patronBarcodeApi,
-              { headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`
-                }
-              }
-            )
-            .then(response => {
-              if (response.data && response.data.data) {
-                item['patronInfo'] = response.data.data;
-                callback(null, item);
-              } else {
-                callback({
-                  holdRequestId: item.id,
-                  status: 404,
-                  type: 'missing-response-data',
-                  message: 'unable to assign the patronInfo key to record. Did not obtain a response.data.data value.'
-                });
-              }
-            })
-            .catch((error) => callback(Object.assign({}, error, { holdRequestId: item.id })));
-          } else {
-            callback(
-              HoldRequestConsumerError({
-                message: 'could not generate a patron barcode API url; undefined or empty patron value',
-                type: 'missing-patron-key-value',
-                status: 404,
-                holdRequestId: item.id,
-                error : {
-                  data: item,
-                }
-              })
-            );
-          }
-        }, (err, results) => {
-          // Handle the appropriate error for each result
-          if (err) {
-            let errorResponse = Object.assign({}, {
-              type: 'patron-service-api',
-              function: functionName,
-            }, err);
-
-            if (err.response) {
-              // The request was made and the server responded with a status code
-              // that falls out of the range of 2xx
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: 'received a status outside of the 2xx range from Patron Service',
-                status: err.response.status,
-                error : {
-                  method: err.response.request.method,
-                  url: err.response.request.path,
-                  headers: err.response.headers,
-                  data: err.response.data
-                }
-              }));
-            } else if (err.request) {
-              // The request was made but no response was received
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: 'request was made, no response from Patron Service',
-                status: 500,
-                error : err.request
-              }));
-            } else {
-              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-                message: err.message,
-                status: err.status || 500,
-                error: err.error
-              }));
-            }
-            // Reject the promise with the proper HRC Error
-            reject(errorResponse);
-          } else {
-            const mergedArrayResults = [].concat.apply([], results);
-            resolve(mergedArrayResults);
-          }
-        });
-      }
-    });
+    if (type === 'patronBarcodeApi') {
+      return this.processGetPatronBarcodeRequests(itemsArray, token, baseApiUrl);
+    }
   };
 
   this.generateItemApiUrlsArray = (records, baseApiUrl) => {
