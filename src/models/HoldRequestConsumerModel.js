@@ -7,7 +7,7 @@ function HoldRequestConsumerModel(records) {
   }
 
   this.records = null;
-  this.apiUrlsArray = null;
+  this.itemApiUrls = null;
 
   this.initialize = (records) => {
     if (typeof records === 'object' && records.length) {
@@ -29,12 +29,12 @@ function HoldRequestConsumerModel(records) {
     this.records = records;
   };
 
-  this.getApiUrlsArray = () => {
-    return this.apiUrlsArray;
+  this.getItemServiceApiUrls = () => {
+    return this.itemApiUrls;
   };
 
-  this.setApiUrlsArray = (urlsArray) => {
-    this.apiUrlsArray = urlsArray;
+  this.setItemServiceApiUrls = (urlsArray) => {
+    this.itemApiUrls = urlsArray;
   };
 
   this.mergeRecordsBySourceAndRecordId = (initialRecords, updatedRecords) => {

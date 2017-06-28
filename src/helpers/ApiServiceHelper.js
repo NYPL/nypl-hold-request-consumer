@@ -30,7 +30,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret === '' || this.scope === '') ? false : true;
   };
 
-  this.processBatchRequest = (urlsArray, token, type) => {
+  this.processBatchRequest = (itemsArray, token, type, baseApiUrl) => {
     const functionName = 'processBatchRequest';
     if (!token || token === '') {
       return Promise.reject(
@@ -42,7 +42,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-    if (!urlsArray.length) {
+    if (!itemsArray.length) {
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the urls array parameter is empty',
@@ -64,7 +64,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     return new Promise(function (resolve, reject) {
       if (type === 'itemApi') {
-        async.map(urlsArray, function(urlItem, cb) {
+        async.map(itemsArray, function(urlItem, cb) {
           return axios.get(urlItem.itemApi,
             { headers: {
                 'Content-Type': 'application/json',
@@ -80,39 +80,39 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           .catch((error) => cb(error));
         }, (err, results) => {
           if (err) {
-            let errorResponse;
+            let errorResponse = {
+              type: 'item-service-api',
+              function: functionName
+            };
+
             if (err.response) {
               // The request was made and the server responded with a status code
               // that falls out of the range of 2xx
-              errorResponse = HoldRequestConsumerError({
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
                 message: 'received a status outside of the 2xx range from Item Service',
-                type: 'item-service-api',
                 status: err.response.status,
-                function: functionName,
                 error : {
                   method: err.response.request.method,
                   url: err.response.request.path,
                   headers: err.response.headers,
                   data: err.response.data
                 }
-              });
+              }));
             } else if (err.request) {
               // The request was made but no response was received
-              errorResponse = HoldRequestConsumerError({
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
                 message: 'request was made, no response from Item Service',
-                type: 'item-service-api',
                 status: 500,
-                function: functionName,
                 error : err.request
-              });
+              }));
             } else {
-              errorResponse = HoldRequestConsumerError({
-                message: err.message,
-                type: 'item-service-api',
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+                message: err.message || 'an error occured from Item Service',
                 status: 500,
-                function: functionName
-              });
+                error: err,
+              }));
             }
+            // Reject the promise with the proper HRC Error
             reject(errorResponse);
           } else {
             // Merge two-dimensional array
@@ -123,63 +123,90 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       }
 
       if (type === 'patronBarcodeApi') {
-        async.map(urlsArray, function(urlItem, callback) {
-          return axios.get(urlItem.patronBarcodeApi,
-            { headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-              }
-            }
-          )
-          .then(response => {
-            if (response.data && response.data.data) {
-              callback(null, response.data.data);
-            }
-          })
-          .catch((error) => callback(error));
-        }, (err, results) => {
-          // if (!err) {
-          //   // Merge two-dimensional array
-            // const mergedArrayResults = [].concat.apply([], results);
-            // resolve(mergedArrayResults);
-          // }
+        // Only require the baseApiUrl to concatenate the patronBarcodeApi
+        if (!baseApiUrl || baseApiUrl === '') {
+          reject(
+            HoldRequestConsumerError({
+              message: `the baseApiUrl parameter is not defined or empty for type: ${type}`,
+              type: 'undefined-base-api-url-parameter',
+              function: functionName
+            })
+          );
+        }
 
-          let errorResponse;
+        async.map(itemsArray, function(item, callback) {
+          if (item.patron && item.patron !== '') {
+            const patronBarcodeApi = `${baseApiUrl}patrons/${item.patron}/barcode`;
+            return axios.get(patronBarcodeApi,
+              { headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`
+                }
+              }
+            )
+            .then(response => {
+              if (response.data && response.data.data) {
+                item['patronInfo'] = response.data.data;
+                callback(null, item);
+              } else {
+                callback({
+                  holdRequestId: item.id,
+                  status: 404,
+                  type: 'missing-response-data',
+                  message: 'unable to assign the patronInfo key to record. Did not obtain a response.data.data value.'
+                });
+              }
+            })
+            .catch((error) => callback(Object.assign({}, error, { holdRequestId: item.id })));
+          } else {
+            callback(
+              HoldRequestConsumerError({
+                message: 'could not generate a patron barcode API url; undefined or empty patron value',
+                type: 'missing-patron-key-value',
+                status: 404,
+                holdRequestId: item.id,
+                error : {
+                  data: item,
+                }
+              })
+            );
+          }
+        }, (err, results) => {
           // Handle the appropriate error for each result
           if (err) {
+            let errorResponse = Object.assign({}, {
+              type: 'patron-service-api',
+              function: functionName,
+            }, err);
+
             if (err.response) {
               // The request was made and the server responded with a status code
               // that falls out of the range of 2xx
-              errorResponse = HoldRequestConsumerError({
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
                 message: 'received a status outside of the 2xx range from Patron Service',
-                type: 'patron-service-api',
                 status: err.response.status,
-                function: functionName,
                 error : {
                   method: err.response.request.method,
                   url: err.response.request.path,
                   headers: err.response.headers,
                   data: err.response.data
                 }
-              });
+              }));
             } else if (err.request) {
               // The request was made but no response was received
-              errorResponse = HoldRequestConsumerError({
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
                 message: 'request was made, no response from Patron Service',
-                type: 'patron-service-api',
                 status: 500,
-                function: functionName,
                 error : err.request
-              });
+              }));
             } else {
-              errorResponse = HoldRequestConsumerError({
+              errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
                 message: err.message,
-                type: 'patron-service-api',
-                status: 500,
-                function: functionName
-              });
+                status: err.status || 500,
+                error: err.error
+              }));
             }
-
+            // Reject the promise with the proper HRC Error
             reject(errorResponse);
           } else {
             const mergedArrayResults = [].concat.apply([], results);
@@ -190,8 +217,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this.generateRecordApiUrlsArray = (records, baseApiUrl) => {
-    const functionName = 'setItemApiUrlToRecord';
+  this.generateItemApiUrlsArray = (records, baseApiUrl) => {
+    const functionName = 'generateItemApiUrlsArray';
     if (!baseApiUrl || baseApiUrl === '') {
       return Promise.reject(
         HoldRequestConsumerError({
@@ -236,11 +263,9 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     // Create the Items API URL from the base URL
     const itemApiUrlBase = `${baseApiUrl}items?id=`;
-    const patronBarcodeApiUrlBase = `${baseApiUrl}patrons`;
     const itemApiUrlsArray = [];
     // Store a reference that will be re-assigned and concatenated
     let itemApiUrl = itemApiUrlBase;
-    let patronBarcodeApiUrl = '';
     // Iterate over the records object keys grouped by nyplSource
     Object.keys(groupedRecords).forEach((key) => {
       const arrayOfDecodedRecords = groupedRecords[key];
@@ -270,20 +295,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           );
         }
 
-        // Verify the existence of the 'record' property
-        if (!arrayOfDecodedRecords[k].hasOwnProperty('patron') || !arrayOfDecodedRecords[k].patron) {
-          return Promise.reject(
-              HoldRequestConsumerError({
-              message: 'the patron object key within the patron id is not defined',
-              type: 'empty-object-property-patron',
-              function: functionName,
-              error: { nyplSource: key, data: arrayOfDecodedRecords[k] }
-            })
-          );
-        }
-        // Generate patron barcode url
-        patronBarcodeApiUrl = `${patronBarcodeApiUrlBase}/${arrayOfDecodedRecords[k].patron}/barcode`;
-
         // Append the record value (id) to url string
         itemApiUrl += arrayOfDecodedRecords[k].record;
 
@@ -298,7 +309,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       itemApiUrlsArray.push({
         'nyplSource': key,
         'itemApi': itemApiUrl,
-        'patronBarcodeApi': patronBarcodeApiUrl,
         'data': arrayOfDecodedRecords
       });
       // Reset the item URL for the next record
@@ -306,10 +316,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
 
     return Promise.resolve(itemApiUrlsArray);
-  };
-
-  this.getItemData = (records, apiUrl) => {
-    // Scaffold for API Call to Item service
   };
 
   this.groupRecordsBy = (records, key) => {

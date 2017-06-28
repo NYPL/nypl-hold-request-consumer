@@ -15,6 +15,10 @@ function HoldRequestConsumerError (settings, implementationContext) {
     this.status = settings.status;
   }
 
+  if (settings.holdRequestId) {
+    this.holdRequestId = settings.holdRequestId;
+  }
+
   if (settings.function) {
     this.function = settings.function;
   }

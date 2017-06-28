@@ -48,24 +48,23 @@ exports.kinesisHandler = (records, opts = {}, context) => {
       streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
     ]).then(result => {
       CACHE['access_token'] = result[0];
-      // Save the decoded records to the Model Object
       hrcModel.setRecords(result[1]);
-      return apiHelper.generateRecordApiUrlsArray(hrcModel.getRecords(), apiUri);
+      return apiHelper.generateItemApiUrlsArray(hrcModel.getRecords(), apiUri);
     })
-    .then(apiUrlsArray => {
-      hrcModel.setApiUrlsArray(apiUrlsArray);
-      return apiHelper.processBatchRequest(hrcModel.getApiUrlsArray(), CACHE['access_token'], 'itemApi');
+    .then(itemServiceApiUrlsArray => {
+      hrcModel.setItemServiceApiUrls(itemServiceApiUrlsArray);
+      return apiHelper.processBatchRequest(hrcModel.getItemServiceApiUrls(), CACHE['access_token'], 'itemApi');
     })
-    .then(recordsWithItemData => {
-      return hrcModel.mergeRecordsBySourceAndRecordId(hrcModel.getRecords(), recordsWithItemData);
+    .then(resultOfRecordsWithItemData => {
+      return hrcModel.mergeRecordsBySourceAndRecordId(hrcModel.getRecords(), resultOfRecordsWithItemData);
     })
-    .then(updatedRecordsWithItemData => {
-      hrcModel.setRecords(updatedRecordsWithItemData);
-      console.log(hrcModel.getRecords()[0]);
-      // return apiHelper.processBatchRequest(hrcModel.getApiUrlsArray(), CACHE['access_token'], 'patronBarcodeApi');
+    .then(mergeRecordsWithItemData => {
+      hrcModel.setRecords(mergeRecordsWithItemData);
+      return apiHelper.processBatchRequest(hrcModel.getRecords(), CACHE['access_token'], 'patronBarcodeApi', apiUri);
     })
     .then(recordsWithPatronBarcode => {
-      // console.log(recordsWithPatronBarcode);
+      hrcModel.setRecords(recordsWithPatronBarcode);
+      console.log(hrcModel.getRecords());
     })
     .catch(error => {
       console.log('PROMISE CHAIN CATCH:', error);
@@ -89,7 +88,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequestService', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: 'HoldRequest-alpha', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }
