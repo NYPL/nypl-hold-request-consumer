@@ -101,6 +101,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     return new Promise((resolve, reject) => {
+      itemsArray[0].patron = 'testfakepatron';
+
       async.map(itemsArray, (item, callback) => {
         // Only process GET requests if the patron value is defined
         if (item.patron && item.patron !== '') {
@@ -109,74 +111,94 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           .then(response => {
             if (response.data && response.data.data) {
               item['patronInfo'] = response.data.data;
+              // console.log(response.data.data);
               callback(null, item);
-            } else {
-              callback({
-                holdRequestId: item.id,
-                status: 404,
-                type: 'missing-response-data',
-                message: 'unable to assign the patronInfo key to record. Did not obtain a response.data.data value.'
-              });
+              // resolve(item);
             }
+            // else {
+            //   callback({
+            //     holdRequestId: item.id,
+            //     status: 404,
+            //     type: 'missing-response-data',
+            //     message: 'unable to assign the patronInfo key to record. Did not obtain a response.data.data value.'
+            //   });
+            // }
           })
           .catch((error) => {
-            // TODO: LOG ERROR
-            callback(Object.assign({}, error, { holdRequestId: item.id }));
+            // TODO: LOG ERROR & SEND TO STREAM ERROR ITEM
+            console.log('ERROR FOR holdRequestId: ' + item.id);
+            callback(null);
+            //callback(Object.assign({}, error, { holdRequestId: item.id }));
           });
         } else {
-          callback(
-            HoldRequestConsumerError({
-              message: 'could not generate a patron barcode API url; undefined or empty patron value',
-              type: 'missing-patron-key-value',
-              status: 404,
-              holdRequestId: item.id,
-              error : {
-                data: item,
-              }
-            })
-          );
+
+          // TODO: LOG MISSING PATRON VALUE POST TO STREAM
+          // callback(
+          //   HoldRequestConsumerError({
+          //     message: 'could not generate a patron barcode API url; undefined or empty patron value',
+          //     type: 'missing-patron-key-value',
+          //     status: 404,
+          //     holdRequestId: item.id,
+          //     error : {
+          //       data: item,
+          //     }
+          //   })
+          // );
         }
       }, (err, results) => {
-        // Handle the appropriate error for each result
-        if (err) {
-          let errorResponse = Object.assign({}, {
-            type: 'patron-service-api',
-            function: functionName,
-          }, err);
+        // console.log(results);
+        // console.log(results.length);
 
-          if (err.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-              message: 'received a status outside of the 2xx range from Patron Service',
-              status: err.response.status,
-              error : {
-                method: err.response.request.method,
-                url: err.response.request.path,
-                headers: err.response.headers,
-                data: err.response.data
-              }
-            }));
-          } else if (err.request) {
-            // The request was made but no response was received
-            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-              message: 'request was made, no response from Patron Service',
-              status: 500,
-              error : err.request
-            }));
-          } else {
-            errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
-              message: err.message,
-              status: err.status || 500,
-              error: err.error
-            }));
-          }
-          // Reject the promise with the proper HRC Error
-          reject(errorResponse);
-        } else {
-          const mergedArrayResults = [].concat.apply([], results);
-          resolve(mergedArrayResults);
+        if (!err) {
+          resolve(results.filter(n => n));
         }
+        // if (results) {
+        //   const filteredArray = resluts.filter(n => n );
+        //   console.log(filteredArray);
+        // }
+        // Handle the appropriate error for each result
+        // if (err) {
+        //   let errorResponse = Object.assign({}, {
+        //     type: 'patron-service-api',
+        //     function: functionName,
+        //   }, err);
+        //
+        //   if (err.response) {
+        //     // The request was made and the server responded with a status code
+        //     // that falls out of the range of 2xx
+        //     errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+        //       message: 'received a status outside of the 2xx range from Patron Service',
+        //       status: err.response.status,
+        //       error : {
+        //         method: err.response.request.method,
+        //         url: err.response.request.path,
+        //         headers: err.response.headers,
+        //         data: err.response.data
+        //       }
+        //     }));
+        //   } else if (err.request) {
+        //     // The request was made but no response was received
+        //     errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+        //       message: 'request was made, no response from Patron Service',
+        //       status: 500,
+        //       error : err.request
+        //     }));
+        //   } else {
+        //     errorResponse = HoldRequestConsumerError(Object.assign({}, errorResponse, {
+        //       message: err.message,
+        //       status: err.status || 500,
+        //       error: err.error
+        //     }));
+        //   }
+        //   // Reject the promise with the proper HRC Error
+        //   // reject(errorResponse);
+        // }
+        //
+        // if (results){
+        //   const mergedArrayResults = [].concat.apply([], results);
+        //   console.log(results);
+        //   // resolve(mergedArrayResults);
+        // }
       });
     });
   };
