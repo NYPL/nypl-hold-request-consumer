@@ -78,7 +78,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             // TODO: POST FAILURE TO STREAM
             logger.error(
               'unable to retrieve item data for hold request record, posting failed record to HoldRequestResult stream',
-              { holdRequestId: item.id, record: item, error: hrcError }
+              { holdRequestId: item.id, record: item }
             );
 
             // Ignore all other failures and continue with callback, except 401 (access_token expired)
@@ -138,7 +138,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             // TODO: POST FAILURE TO STREAM
             logger.error(
               'unable to retrieve patron data for hold request record, posting failed record to HoldRequestResult stream',
-              { holdRequestId: item.id, record: item, error: hrcError }
+              { holdRequestId: item.id, record: item }
             );
 
             // Ignore all other failures and continue with callback, except 401 (access_token expired)
