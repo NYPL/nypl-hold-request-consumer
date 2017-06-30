@@ -4,7 +4,7 @@ const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel'
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const logger = require('./src/helpers/Logger');
-const CACHE = {};
+const CACHE = require('./src/globals/index');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: './config/local.env' });
@@ -29,11 +29,12 @@ exports.kinesisHandler = (records, opts = {}, context) => {
         function: functionName
       });
     }
+    // Store the Schema Name & NYPL Data API Base Url to CACHE
+    CACHE.setSchemaName(opts.schema);
+    CACHE.setNyplDataApiBase(opts.apiUri);
 
-    const schema = opts.schema;
-    const apiUri = opts.apiUri;
     const hrcModel = new HoldRequestConsumerModel();
-    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: apiUri });
+    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: CACHE.getNyplDataApiBase() });
     const apiHelper = new ApiServiceHelper(
       process.env.OAUTH_PROVIDER_URL,
       process.env.OAUTH_CLIENT_ID,
@@ -42,30 +43,30 @@ exports.kinesisHandler = (records, opts = {}, context) => {
     );
 
     Promise.all([
-      apiHelper.getOAuthToken(CACHE['access_token']),
-      streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
+      apiHelper.getTokenFromOAuthService(CACHE.getAccessToken()),
+      streamsClient.decodeData(CACHE.getSchemaName(), records.map(i => i.kinesis.data))
     ]).then(result => {
-      CACHE['access_token'] = result[0];
+      logger.info('storing access_token in CACHE global');
+      CACHE.setAccessToken(result[0]);
+      logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
-      return apiHelper.generateItemApiUrlsArray(hrcModel.getRecords(), apiUri);
+      logger.info('executing async function call to Item Service for fetching Item data for records');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
     })
-    .then(itemServiceApiUrlsArray => {
-      hrcModel.setItemServiceApiUrls(itemServiceApiUrlsArray);
-      return apiHelper.processBatchRequest(hrcModel.getItemServiceApiUrls(), CACHE['access_token'], 'itemApi');
+    .then(recordsWithItemData => {
+      logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
+      hrcModel.setRecords(recordsWithItemData);
+      logger.info('executing async function call to Patron Service for fetching Patron data for records');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
     })
-    .then(resultOfRecordsWithItemData => {
-      return hrcModel.mergeRecordsBySourceAndRecordId(hrcModel.getRecords(), resultOfRecordsWithItemData);
-    })
-    .then(mergeRecordsWithItemData => {
-      hrcModel.setRecords(mergeRecordsWithItemData);
-      return apiHelper.processBatchRequest(hrcModel.getRecords(), CACHE['access_token'], 'patronBarcodeApi', apiUri);
-    })
-    .then(recordsWithPatronBarcode => {
-      hrcModel.setRecords(recordsWithPatronBarcode);
-      console.log(hrcModel.getRecords());
+    .then(recordsWithPatronData => {
+      logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
+      hrcModel.setRecords(recordsWithPatronData);
+      // console.log(hrcModel.getRecords());
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'recap-service');
     })
     .catch(error => {
-      console.log('PROMISE CHAIN CATCH:', error);
+      logger.error('A fatal error occured with a promise', { error: error });
       // Handling Errors From Promise Chain
       if (error.status === 403) {
         // Handle Forbidden Errors

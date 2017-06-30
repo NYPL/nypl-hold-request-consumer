@@ -41,7 +41,6 @@
     "@nypl/nypl-streams-client": "0.1.4",
     "async": "2.5.0",
     "axios": "0.16.2",
-    "lodash": "4.17.4",
     "qs": "6.4.0",
     "winston": "2.3.1"
   },
