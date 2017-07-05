@@ -10,7 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: './config/local.env' });
 };
 
-exports.kinesisHandler = (records, opts = {}, context) => {
+exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
 
   try {
@@ -48,38 +48,49 @@ exports.kinesisHandler = (records, opts = {}, context) => {
     ]).then(result => {
       logger.info('storing access_token in CACHE global');
       CACHE.setAccessToken(result[0]);
+
       logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
-      logger.info('executing async function call to Item Service for fetching Item data for records');
+
+      logger.info('executing async function call to Item Service to fetch Item data for hold-request records');
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
     })
     .then(recordsWithItemData => {
       logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithItemData);
-      logger.info('executing async function call to Patron Service for fetching Patron data for records');
+
+      logger.info('executing async function call to Patron Service to fetch Patron data for hold-request records');
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
     })
     .then(recordsWithPatronData => {
       logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithPatronData);
-      // console.log(hrcModel.getRecords());
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'recap-service');
+
+      console.log(hrcModel.getRecords());
     })
     .catch(error => {
-      logger.error('A fatal error occured with a promise', { error: error });
-      // Handling Errors From Promise Chain
-      if (error.status === 403) {
-        // Handle Forbidden Errors
+      // Handling Errors From Promise Chain, these errors are non-recoverable and must stop the handler from executing
+
+      // Handle errors from HoldRequestProcessed Stream
+      // Occurs when a Hold Request record could not be posted to the Processed Stream
+      if (error.errorType === 'hold-request-processed-stream-error') {
+        // Stop the execution of the stream, restart handler.
+        logger.info('restarting the lambda; unable to POST data to the HoldRequestResult Stream');
       }
 
-      if (error.status === 401) {
-        // Handle OAuth Token refresh
+      // Handle OAuth Token expired error
+      if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
+        // Stop the execution of the stream, restart handler.
+        logger.info('restarting the lambda; OAuth token has expired and cannot continue fulfilling NYPL Data API requests');
+        CACHE.setAccessToken(null);
       }
+
+      // return callback(error);
     });
   } catch (error) {
     logger.error(
-      error.message,
-      { type: error.type, function: error.function }
+      error.errorMessage,
+      { type: error.errorType, function: error.function }
     );
   }
 };
@@ -91,7 +102,8 @@ exports.handler = (event, context, callback) => {
     exports.kinesisHandler(
       event.Records,
       { schema: 'HoldRequest', apiUri: process.env.NYPL_DATA_API_URL },
-      context
+      context,
+      callback
     );
   }
 };

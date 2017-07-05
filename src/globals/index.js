@@ -2,6 +2,7 @@ const CACHE = module.exports = {
   access_token: null,
   nypl_data_api_base: '',
   schema_name: '',
+  hq_results_stream_name: 'HoldRequestResult',
   getAccessToken: function() {
     return CACHE.access_token;
   },
@@ -19,5 +20,11 @@ const CACHE = module.exports = {
   },
   setSchemaName: function(name) {
     CACHE.schema_name = name;
+  },
+  getResultsStreamName: function() {
+    return CACHE.hq_results_stream_name;
+  },
+  setResultsStreamName: function(name) {
+    CACHE.hq_results_stream_name = name;
   }
 };
