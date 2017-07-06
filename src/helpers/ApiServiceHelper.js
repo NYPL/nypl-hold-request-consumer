@@ -18,19 +18,19 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   this.scope = scope;
   this.grantType = grantType;
 
-  this.constructApiHeaders = (token = '', contentType = 'application/json') => {
+  this.constructApiHeaders = (token = '', contentType = 'application/json', timeOut = 10000) => {
     return {
       headers: {
         'Content-Type': contentType,
         Authorization: `Bearer ${token}`
       },
-      timeout: 10000
+      timeout: timeOut
     };
   };
 
   this.areRequiredParamsValid = () => {
-    return (this.oauthUrl === '' || this.clientId === '' ||
-      this.clientSecret === '' || this.scope === '') ? false : true;
+    return (this.oauthUrl !== '' || this.clientId !== '' ||
+      this.clientSecret !== '' || this.scope !== '');
   };
 
   this.handleErrorCodesFallback = (errorObj, holdRequestId, serviceName, callback) => {
@@ -47,7 +47,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             type: 'access-token-invalid',
             status: errorObj.response.status,
             function: functionName,
-            error : errorObj.response
+            error: errorObj.response
           })
         );
       }
@@ -60,7 +60,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             type: 'access-forbidden-for-scopes',
             status: errorObj.response.status,
             function: functionName,
-            error : errorObj.response
+            error: errorObj.response
           })
         );
       }
@@ -91,7 +91,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       objectToBePosted.success = false;
       objectToBePosted.error = {
         type: obj.errorType,
-        message: obj.errorMessage,
+        message: obj.errorMessage
       };
     } else {
       objectToBePosted.success = true;
@@ -159,13 +159,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               // At this point, we could not POST the failed hold request to the results stream.
               // We are exiting the promise chain and restarting the kinesis handler
               return callback(HoldRequestConsumerError({
-                  message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-                  type: 'hold-request-results-stream-error',
-                  status: err.response && err.response.status ? err.response.status : null,
-                  function: 'postRecordToResultsStream',
-                  error : err,
-                })
-              );
+                message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-results-stream-error',
+                status: err.response && err.response.status ? err.response.status : null,
+                function: 'postRecordToResultsStream',
+                error: err
+              }));
             });
           });
         }
@@ -198,13 +197,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           // At this point, we could not POST the failed hold request to the results stream.
           // We are exiting the promise chain and restarting the kinesis handler
           return callback(HoldRequestConsumerError({
-              message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-              type: 'hold-request-results-stream-error',
-              status: err.response && err.response.status ? err.response.status : null,
-              function: 'postRecordToResultsStream',
-              error : err,
-            })
-          );
+            message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
+            type: 'hold-request-results-stream-error',
+            status: err.response && err.response.status ? err.response.status : null,
+            function: 'postRecordToResultsStream',
+            error: err
+          }));
         });
       }, (err, results) => {
         return (err) ? reject(err) : resolve(results.filter(n => n));
@@ -263,20 +261,19 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             })
             .catch(err => {
               logger.error(
-                'unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error',
+                `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
                 { holdRequestId: item.id, error: err }
               );
 
               // At this point, we could not POST the failed hold request to the results stream.
               // We are exiting the promise chain and restarting the kinesis handler
               return callback(HoldRequestConsumerError({
-                  message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-                  type: 'hold-request-results-stream-error',
-                  status: err.response && err.response.status ? err.response.status : null,
-                  function: 'postRecordToResultsStream',
-                  error : err,
-                })
-              );
+                message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-results-stream-error',
+                status: err.response && err.response.status ? err.response.status : null,
+                function: 'postRecordToResultsStream',
+                error: err
+              }));
             });
           });
         }
@@ -309,13 +306,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           // At this point, we could not POST the failed hold request to the results stream.
           // We are exiting the promise chain and restarting the kinesis handler
           return callback(HoldRequestConsumerError({
-              message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-              type: 'hold-request-results-stream-error',
-              status: err.response && err.response.status ? err.response.status : null,
-              function: 'postRecordToResultsStream',
-              error : err,
-            })
-          );
+            message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
+            type: 'hold-request-results-stream-error',
+            status: err.response && err.response.status ? err.response.status : null,
+            function: 'postRecordToResultsStream',
+            error: err
+          }));
         });
       }, (err, results) => {
         return (err) ? reject(err) : resolve(results.filter(n => n));
@@ -382,11 +378,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         { params: 'client_id, client_secret, grant_type, scope' }
       );
       return Promise.reject(HoldRequestConsumerError({
-          message: 'OAuth required parameters are not defined',
-          type: 'undefined-oauth-required-parameters',
-          function: functionName
-        })
-      );
+        message: 'OAuth required parameters are not defined',
+        type: 'undefined-oauth-required-parameters',
+        function: functionName
+      }));
     }
 
     if (!cachedToken) {
@@ -402,11 +397,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         // We obtained a valid response. However, we could not get a value from access_token
         logger.error(`missing access_token value from OAuth Service response in function: ${functionName}`);
         return Promise.reject(HoldRequestConsumerError({
-            message: 'missing access_token value from OAuth Service',
-            type: 'missing-access-token-from-oauth-service',
-            function: functionName
-          })
-        );
+          message: 'missing access_token value from OAuth Service',
+          type: 'missing-access-token-from-oauth-service',
+          function: functionName
+        }));
       })
       .catch((error) => {
         if (error.response) {
@@ -414,40 +408,37 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           // that falls out of the range of 2xx
           logger.error(`received a status outside of the 2xx range from OAuth Service in function: ${functionName}`);
           return Promise.reject(HoldRequestConsumerError({
-              message: 'received a status outside of the 2xx range',
-              type: 'oauth-service-error',
-              status: error.response.status,
-              function: functionName,
-              error : {
-                method: error.response.request.method,
-                url: error.response.request.path,
-                headers: error.response.headers,
-                data: error.response.data
-              }
-            })
-          );
+            message: 'received a status outside of the 2xx range',
+            type: 'oauth-service-error',
+            status: error.response.status,
+            function: functionName,
+            error: {
+              method: error.response.request.method,
+              url: error.response.request.path,
+              headers: error.response.headers,
+              data: error.response.data
+            }
+          }));
         }
 
         if (error.request) {
           // The request was made but no response was received
           logger.error(`request was made, no response OAuth Service in function: ${functionName}`);
           return Promise.reject(HoldRequestConsumerError({
-              message: 'request was made, no response from OAuth Service',
-              type: 'oauth-service-error',
-              function: functionName,
-              error : error.request
-            })
-          );
+            message: 'request was made, no response from OAuth Service',
+            type: 'oauth-service-error',
+            function: functionName,
+            error: error.request
+          }));
         }
 
         logger.error(`an internal server error occurred from OAuth Service in function: ${functionName}`);
         return Promise.reject(HoldRequestConsumerError({
-            message: 'An internal server error occurred',
-            type: 'oauth-service-error',
-            status: 500,
-            function: functionName
-          })
-        );
+          message: 'An internal server error occurred',
+          type: 'oauth-service-error',
+          status: 500,
+          function: functionName
+        }));
       })
     } else {
       logger.info('already obtained an access_token from CACHE, not executing call to get token from OAuth Service');
