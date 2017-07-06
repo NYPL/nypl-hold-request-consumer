@@ -69,20 +69,33 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       console.log(hrcModel.getRecords());
     })
     .catch(error => {
-      // Handling Errors From Promise Chain, these errors are non-recoverable and must stop the handler from executing
+      // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
+      console.log(error);
+      // Handle Avro Errors which prevents the Lambda from decoding data to process
+      if (error.name == 'AvroValidationError') {
+        logger.error(
+          'restarting the HoldRequestConsumer Lambda; obtained an AvroValidationError',
+          { error: error.message }
+        );
+      }
 
       // Handle errors from HoldRequestProcessed Stream
-      // Occurs when a Hold Request record could not be posted to the Processed Stream
-      if (error.errorType === 'hold-request-processed-stream-error') {
+      // Occurs when a Hold Request record could not be posted to the Results Stream
+      if (error.errorType === 'hold-request-results-stream-error') {
         // Stop the execution of the stream, restart handler.
-        logger.info('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream');
+        logger.error('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream');
       }
 
       // Handle OAuth Token expired error
       if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
-        // Stop the execution of the stream, restart handler.
-        logger.info('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
+        logger.info('setting the cached token to null before Lambda restart');
         CACHE.setAccessToken(null);
+        // Stop the execution of the stream, restart handler.
+        logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
+      }
+
+      if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
+        logger.error('restarting the HoldRequestConsumer Lambda; scopes are forbidden, cannot continue fulfilling NYPL Data API requests');
       }
 
       // return callback(error);
