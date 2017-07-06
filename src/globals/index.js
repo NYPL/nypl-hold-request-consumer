@@ -1,30 +1,30 @@
 const CACHE = module.exports = {
   access_token: null,
   nypl_data_api_base: '',
-  schema_name: '',
-  hq_results_stream_name: 'HoldRequestResult',
-  getAccessToken: function() {
+  hold_req_schema_name: '',
+  hold_req_results_stream_name: '',
+  getAccessToken: () => {
     return CACHE.access_token;
   },
-  setAccessToken: function(token) {
+  setAccessToken: (token) => {
     CACHE.access_token = token;
   },
-  getNyplDataApiBase: function() {
+  getNyplDataApiBase: () => {
     return CACHE.nypl_data_api_base;
   },
-  setNyplDataApiBase: function(url) {
+  setNyplDataApiBase: (url) => {
     CACHE.nypl_data_api_base = url;
   },
-  getSchemaName: function() {
-    return CACHE.schema_name;
+  getSchemaName: () => {
+    return CACHE.hold_req_schema_name;
   },
-  setSchemaName: function(name) {
-    CACHE.schema_name = name;
+  setSchemaName: (name) => {
+    CACHE.hold_req_schema_name = name;
   },
-  getResultsStreamName: function() {
-    return CACHE.hq_results_stream_name;
+  getResultsStreamName: () => {
+    return CACHE.hold_req_results_stream_name;
   },
-  setResultsStreamName: function(name) {
-    CACHE.hq_results_stream_name = name;
+  setResultsStreamName: (name) => {
+    CACHE.hold_req_results_stream_name = name;
   }
 };

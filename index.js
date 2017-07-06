@@ -69,6 +69,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
       console.log(error);
+
       // Handle Avro Errors which prevents the Lambda from decoding data to process
       if (error.name == 'AvroValidationError') {
         logger.error(
@@ -112,7 +113,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequest', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: process.env.HOLD_REQUEST_SCHEMA_NAME, apiUri: process.env.NYPL_DATA_API_URL },
       context,
       callback
     );
