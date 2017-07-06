@@ -4,7 +4,7 @@ const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel'
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const logger = require('./src/helpers/Logger');
-const CACHE = {};
+const CACHE = require('./src/globals/index');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: './config/local.env' });
@@ -15,8 +15,6 @@ exports.kinesisHandler = (records, opts = {}, context) => {
 
   try {
     if (!opts.schema || opts.schema === '') {
-      // Testing Winston Logger
-      logger.error('testing logger', { 'jobId': '12345' });
       throw HoldRequestConsumerError({
         message: 'missing schema name configuration parameter',
         type: 'missing-schema-name-parameter',
@@ -31,42 +29,58 @@ exports.kinesisHandler = (records, opts = {}, context) => {
         function: functionName
       });
     }
+    // Store the Schema Name & NYPL Data API Base Url to CACHE
+    CACHE.setSchemaName(opts.schema);
+    CACHE.setNyplDataApiBase(opts.apiUri);
 
-    // Required parameters are valid execute the following:
-    // 1) Obtain the decoded kinesis data
-    // 2) Obtain a valid OAuth token to process record data
-    const schema = opts.schema;
-    const apiUri = opts.apiUri;
-    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: apiUri });
+    const hrcModel = new HoldRequestConsumerModel();
+    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: CACHE.getNyplDataApiBase() });
     const apiHelper = new ApiServiceHelper(
       process.env.OAUTH_PROVIDER_URL,
       process.env.OAUTH_CLIENT_ID,
       process.env.OAUTH_CLIENT_SECRET,
       process.env.OAUTH_PROVIDER_SCOPE
     );
-    const holdRequestConsumerModel = new HoldRequestConsumerModel();
 
     Promise.all([
-      apiHelper.getOAuthToken(CACHE['access_token']),
-      streamsClient.decodeData(schema, records.map(i => i.kinesis.data))
+      apiHelper.getTokenFromOAuthService(CACHE.getAccessToken()),
+      streamsClient.decodeData(CACHE.getSchemaName(), records.map(i => i.kinesis.data))
     ]).then(result => {
-      // The access_token has been obtained and all records have been grouped by source
-      // Next, we need create a string from the record and nyplSource keys to perform a GET request
-      // to the ItemService
-      CACHE['access_token'] = result[0];
-      // Save the decoded records to the Model Object
-      holdRequestConsumerModel.setRecords(result[1]);
-
-      const groupedRecordsBySource = apiHelper.groupRecordsBy(holdRequestConsumerModel.getRecords(), 'nyplSource');
-      const groupedRecordsWithApiUrl = apiHelper.generateRecordApiUrlsArray(groupedRecordsBySource, apiUri);
-      console.log(groupedRecordsWithApiUrl);
+      logger.info('storing access_token in CACHE global');
+      CACHE.setAccessToken(result[0]);
+      logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
+      hrcModel.setRecords(result[1]);
+      logger.info('executing async function call to Item Service for fetching Item data for records');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
+    })
+    .then(recordsWithItemData => {
+      logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
+      hrcModel.setRecords(recordsWithItemData);
+      logger.info('executing async function call to Patron Service for fetching Patron data for records');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
+    })
+    .then(recordsWithPatronData => {
+      logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
+      hrcModel.setRecords(recordsWithPatronData);
+      // console.log(hrcModel.getRecords());
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'recap-service');
     })
     .catch(error => {
-      console.log('Error from Promise All', error);
-    });
+      logger.error('A fatal error occured with a promise', { error: error });
+      // Handling Errors From Promise Chain
+      if (error.status === 403) {
+        // Handle Forbidden Errors
+      }
 
+      if (error.status === 401) {
+        // Handle OAuth Token refresh
+      }
+    });
   } catch (error) {
-    console.log(error);
+    logger.error(
+      error.message,
+      { type: error.type, function: error.function }
+    );
   }
 };
 
@@ -76,7 +90,7 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: '', apiUri: process.env.NYPL_DATA_API_URL },
+      { schema: 'HoldRequest', apiUri: process.env.NYPL_DATA_API_URL },
       context
     );
   }

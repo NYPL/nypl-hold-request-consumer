@@ -33,19 +33,19 @@ const logger = new winston.Logger({
           result.message = options.message;
         }
 
-        if (process.pid) {
-          result.pid = process.pid.toString();
-        }
-
         if (options.meta && Object.keys(options.meta).length) {
-          if (options.meta.jobId) {
-            result.jobId = options.meta.jobId;
-            delete options.meta.jobId;
+          if (options.meta.holdRequestId) {
+            result.holdRequestId = options.meta.holdRequestId;
+            delete options.meta.holdRequestId;
           }
 
           if (options.meta && Object.keys(options.meta).length) {
             result.meta = JSON.stringify(options.meta);
           }
+        }
+
+        if (process.pid) {
+          result.pid = process.pid.toString();
         }
 
         return JSON.stringify(result);

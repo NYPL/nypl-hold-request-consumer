@@ -1,23 +1,12 @@
 /* eslint-disable semi */
 const HoldRequestConsumerError = require('./HoldRequestConsumerError');
-function HoldRequestConsumerModel(records) {
+
+function HoldRequestConsumerModel() {
   if (!(this instanceof HoldRequestConsumerModel)) {
-    return new HoldRequestConsumerModel(records);
+    return new HoldRequestConsumerModel();
   }
 
   this.records = null;
-
-  this.initialize = (records) => {
-    if (typeof records === 'object' && records.length) {
-      return this.setRecords(records);
-    }
-
-    throw HoldRequestConsumerError({
-      message: 'the records array is not defined',
-      type: 'undefined-records-array-parameter',
-      function: 'HoldRequestConsumerModel.initialize'
-    });
-  };
 
   this.getRecords = () => {
     return this.records;
