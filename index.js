@@ -52,14 +52,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
 
-      logger.info('executing async function call to Item Service to fetch Item data for hold-request records');
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
     })
     .then(recordsWithItemData => {
       logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithItemData);
 
-      logger.info('executing async function call to Patron Service to fetch Patron data for hold-request records');
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
     })
     .then(recordsWithPatronData => {

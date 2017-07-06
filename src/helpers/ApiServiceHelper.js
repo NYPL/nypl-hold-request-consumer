@@ -390,12 +390,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (!cachedToken) {
-      logger.info('fetching new token from OAuth Service');
+      logger.info('fetching new access_token from OAuth Service');
       return axios
       .post(this.oauthUrl, qs.stringify(authConfig))
       .then((response) => {
         if (response && response.data && response.data.access_token) {
-          logger.info('successfully obtained a new token from OAuth Service');
+          logger.info('successfully obtained a new access_token from OAuth Service');
           return response.data.access_token;
         }
 
