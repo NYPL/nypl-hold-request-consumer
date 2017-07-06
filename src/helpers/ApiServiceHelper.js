@@ -287,7 +287,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         return this.postRecordToResultsStream({
           holdRequestId: item.id,
           jobId: item.jobId,
-          errorType: 'hold-request-record-missing-item-data',
+          errorType: 'hold-request-record-missing-patron-data',
           errorMessage: `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value`
         })
         .then(res => {
