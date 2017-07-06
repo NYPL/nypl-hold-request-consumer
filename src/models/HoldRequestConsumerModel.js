@@ -1,7 +1,5 @@
 /* eslint-disable semi */
-const HoldRequestConsumerError = require('./HoldRequestConsumerError');
-
-function HoldRequestConsumerModel() {
+function HoldRequestConsumerModel () {
   if (!(this instanceof HoldRequestConsumerModel)) {
     return new HoldRequestConsumerModel();
   }

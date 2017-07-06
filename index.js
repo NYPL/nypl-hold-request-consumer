@@ -71,9 +71,9 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       console.log(error);
 
       // Handle Avro Errors which prevents the Lambda from decoding data to process
-      if (error.name == 'AvroValidationError') {
+      if (error.name === 'AvroValidationError') {
         logger.error(
-          'restarting the HoldRequestConsumer Lambda; obtained an AvroValidationError',
+          'restarting the HoldRequestConsumer Lambda; obtained an AvroValidationError which prohibits decoding kinesis stream',
           { error: error.message }
         );
       }
@@ -87,10 +87,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       // Handle OAuth Token expired error
       if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
-        logger.info('setting the cached token to null before Lambda restart');
-        CACHE.setAccessToken(null);
         // Stop the execution of the stream, restart handler.
         logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
+        logger.info('setting the cached acccess_token to null before Lambda restart');
+        CACHE.setAccessToken(null);
       }
 
       if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {

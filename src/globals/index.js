@@ -1,8 +1,9 @@
+/* eslint-disable semi */
 const CACHE = module.exports = {
   access_token: null,
   nypl_data_api_base: '',
   hold_req_schema_name: '',
-  hold_req_results_stream_name: '',
+  hold_req_results_stream_name: 'HoldRequestResult',
   getAccessToken: () => {
     return CACHE.access_token;
   },
