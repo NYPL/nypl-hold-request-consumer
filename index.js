@@ -75,13 +75,13 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       // Occurs when a Hold Request record could not be posted to the Processed Stream
       if (error.errorType === 'hold-request-processed-stream-error') {
         // Stop the execution of the stream, restart handler.
-        logger.info('restarting the lambda; unable to POST data to the HoldRequestResult Stream');
+        logger.info('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream');
       }
 
       // Handle OAuth Token expired error
       if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
         // Stop the execution of the stream, restart handler.
-        logger.info('restarting the lambda; OAuth token has expired and cannot continue fulfilling NYPL Data API requests');
+        logger.info('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
         CACHE.setAccessToken(null);
       }
 
