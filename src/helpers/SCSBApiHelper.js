@@ -82,8 +82,8 @@ const SCSBApiHelper = module.exports = {
             })
             .then(response => {
               logger.info(
-                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
-                { holdRequestId: item.id }
+                `posted failed hold request record (${item.id}) to HoldRequestResult stream; success flag is FALSE for hold request record`,
+                { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
               );
             })
             .catch(err => {
@@ -111,6 +111,34 @@ const SCSBApiHelper = module.exports = {
         return (err) ? reject(err) : resolve(results.filter(n => n));
       });
     });
+  },
+  getSCSBDebugInfo: (response) => {
+    const debug = {};
+    if (response.success) {
+      debug.success = response.success;
+    }
+
+    if (response.screenMessage) {
+      debug.screenMessage = response.screenMessage;
+    }
+
+    if (response.requestType) {
+      debug.requestType = response.requestType;
+    }
+
+    if (response.requestingInstitution) {
+      debug.requestingInstitution = response.requestingInstitution;
+    }
+
+    if (response.deliveryLocation) {
+      debug.deliveryLocation = response.deliveryLocation;
+    }
+
+    if (response.itemBarcodes) {
+      debug.itemBarcodes = response.itemBarcodes;
+    }
+
+    return debug;
   },
   getInstitutionCode: (nyplCode) => {
     // Codes defined in https://htcrecap.atlassian.net/wiki/display/RTG/Request+Item

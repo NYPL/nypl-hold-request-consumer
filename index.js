@@ -105,7 +105,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
-      console.log(error);
+      logger.error('A fatal error occured, Hold Request Consumer Lambda needs to be restarted', { error: error });
 
       // Handle Avro Errors which prevents the Lambda from decoding data to process
       if (error.name === 'AvroValidationError') {

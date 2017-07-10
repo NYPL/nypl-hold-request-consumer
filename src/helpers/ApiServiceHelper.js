@@ -86,8 +86,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-    logger.info(`starting async iteration over ${records.length} records to fetch Item data for each record`);
     return new Promise((resolve, reject) => {
+      logger.info(`starting async iteration over ${records.length} records to fetch Item data for each record`);
       async.map(records, (item, callback) => {
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
@@ -196,8 +196,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-    logger.info(`starting async iteration over ${records.length} records to fetch patron data for each record`);
     return new Promise((resolve, reject) => {
+      logger.info(`starting async iteration over ${records.length} records to fetch patron data for each record`);
       async.map(records, (item, callback) => {
         // Only process GET requests if the patron value is defined
         if (item.patron && item.patron !== '') {
@@ -255,15 +255,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           { holdRequestId: item.id, record: item }
         );
 
-        return ResultStreamHelper.postRecordToStream(
-          {
-            holdRequestId: item.id,
-            jobId: item.jobId,
-            errorType: 'hold-request-record-missing-patron-data',
-            errorMessage: `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value`
-          },
-          CACHE.getResultStreamName()
-        )
+        return ResultStreamHelper.postRecordToStream({
+          holdRequestId: item.id,
+          jobId: item.jobId,
+          errorType: 'hold-request-record-missing-patron-data',
+          errorMessage: `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value`
+        })
         .then(res => {
           logger.error(
             'successfully posted failed hold request record to HoldRequestResults stream',
