@@ -10,7 +10,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: './config/local.env' });
 };
 
-exports.kinesisHandler = (records, opts = {}, context) => {
+exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
 
   try {
@@ -48,38 +48,61 @@ exports.kinesisHandler = (records, opts = {}, context) => {
     ]).then(result => {
       logger.info('storing access_token in CACHE global');
       CACHE.setAccessToken(result[0]);
+
       logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
-      logger.info('executing async function call to Item Service for fetching Item data for records');
+
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
     })
     .then(recordsWithItemData => {
       logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithItemData);
-      logger.info('executing async function call to Patron Service for fetching Patron data for records');
+
       return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
     })
     .then(recordsWithPatronData => {
       logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithPatronData);
-      // console.log(hrcModel.getRecords());
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'recap-service');
+
+      console.log(hrcModel.getRecords());
     })
     .catch(error => {
-      logger.error('A fatal error occured with a promise', { error: error });
-      // Handling Errors From Promise Chain
-      if (error.status === 403) {
-        // Handle Forbidden Errors
+      // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
+      console.log(error);
+
+      // Handle Avro Errors which prevents the Lambda from decoding data to process
+      if (error.name === 'AvroValidationError') {
+        logger.error(
+          'restarting the HoldRequestConsumer Lambda; obtained an AvroValidationError which prohibits decoding kinesis stream',
+          { error: error.message }
+        );
       }
 
-      if (error.status === 401) {
-        // Handle OAuth Token refresh
+      // Handle errors from HoldRequestProcessed Stream
+      // Occurs when a Hold Request record could not be posted to the Results Stream
+      if (error.errorType === 'hold-request-results-stream-error') {
+        // Stop the execution of the stream, restart handler.
+        logger.error('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream');
       }
+
+      // Handle OAuth Token expired error
+      if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
+        // Stop the execution of the stream, restart handler.
+        logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
+        logger.info('setting the cached acccess_token to null before Lambda restart');
+        CACHE.setAccessToken(null);
+      }
+
+      if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
+        logger.error('restarting the HoldRequestConsumer Lambda; scopes are forbidden, cannot continue fulfilling NYPL Data API requests');
+      }
+
+      // return callback(error);
     });
   } catch (error) {
     logger.error(
-      error.message,
-      { type: error.type, function: error.function }
+      error.errorMessage,
+      { type: error.errorType, function: error.function }
     );
   }
 };
@@ -90,8 +113,9 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: 'HoldRequest', apiUri: process.env.NYPL_DATA_API_URL },
-      context
+      { schema: process.env.HOLD_REQUEST_SCHEMA_NAME, apiUri: process.env.NYPL_DATA_API_URL },
+      context,
+      callback
     );
   }
 };

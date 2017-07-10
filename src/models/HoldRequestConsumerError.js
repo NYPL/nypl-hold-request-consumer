@@ -7,12 +7,12 @@ function HoldRequestConsumerError (settings, implementationContext) {
   settings = settings || {};
   // Override the default name property (Error)
   this.name = 'HoldRequestConsumerError';
-  this.type = settings.type || 'hold-request-consumer-error';
-  this.message = settings.message || 'An error occurred';
+  this.errorType = settings.type || 'hold-request-consumer-error';
+  this.errorMessage = settings.message || 'An error occurred';
 
   // Optional settings
   if (settings.status) {
-    this.status = settings.status;
+    this.errorStatus = settings.status;
   }
 
   if (settings.holdRequestId) {
@@ -24,7 +24,7 @@ function HoldRequestConsumerError (settings, implementationContext) {
   }
 
   if (settings.error) {
-    this.error = settings.error;
+    this.errorDetails = settings.error;
   }
   // This is just a flag that will indicate if the error is a custom HoldRequestConsumerError. If this
   // is not an HoldRequestConsumerError, this property will be undefined, which is a Falsey.
