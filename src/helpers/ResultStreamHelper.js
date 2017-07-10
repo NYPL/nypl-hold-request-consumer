@@ -1,4 +1,6 @@
+/* eslint-disable semi */
 const NyplStreamsClient = require('@nypl/nypl-streams-client');
+const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const CACHE = require('../globals/index');
 
 const ResultStreamHelper = module.exports = {
@@ -10,19 +12,23 @@ const ResultStreamHelper = module.exports = {
     });
 
     if (!obj.holdRequestId || obj.holdRequestId === '') {
-      return HoldRequestConsumerError({
-        message: 'the hold request id is not defined for the record, unable to post failed record to stream',
-        type: 'undefined-hold-request-id',
-        function: functionName
-      });
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the hold request id is not defined for the record, unable to post failed record to stream',
+          type: 'undefined-hold-request-id',
+          function: functionName
+        })
+      );
     }
 
     if (!streamName) {
-      return HoldRequestConsumerError({
-        message: 'the stream name used to post results is undefined',
-        type: 'undefined-stream-name',
-        function: functionName
-      });
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the stream name used to post results is undefined',
+          type: 'undefined-stream-name',
+          function: functionName
+        })
+      );
     }
 
     objectToBePosted.holdRequestId = obj.holdRequestId;
