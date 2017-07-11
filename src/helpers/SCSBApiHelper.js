@@ -49,7 +49,7 @@ const SCSBApiHelper = module.exports = {
               })
               .then(response => {
                 logger.info(
-                  `successfully posted EDD hold request record (${item.id}) to HoldRequestResult Stream`,
+                  `successfully posted EDD hold request record (${item.id}) to HoldRequestResult Stream, assigned response to existing record`,
                   { holdRequestId: item.id }
                 );
 
@@ -84,7 +84,7 @@ const SCSBApiHelper = module.exports = {
             })
             .then(response => {
               logger.info(
-                `posted failed hold request record (${item.id}) to HoldRequestResult stream; success flag is FALSE for hold request record`,
+                `posted failed hold request record (${item.id}) to HoldRequestResult stream; success flag is FALSE for hold request record, assigned response to existing record`,
                 { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
               );
             })
@@ -235,7 +235,9 @@ const SCSBApiHelper = module.exports = {
       }
     }
 
-    if (object.pickupLocation) {
+    if (object.deliveryLocation) {
+      scsbModel.deliveryLocation = object.deliveryLocation;
+    } else if (object.pickupLocation) {
       scsbModel.deliveryLocation = bySierraLocation[object.pickupLocation]['recapLocation']['code'];
     }
 

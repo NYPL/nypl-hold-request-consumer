@@ -134,6 +134,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .then(resultsOfRecordswithScsbResponse => {
       logger.info('storing updated records containing SCSB API response to HoldRequestConsumerModel');
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
+
       return callback(null, 'successfully processed hold request records to SCSB API');
     })
     .catch(error => {
