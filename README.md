@@ -77,6 +77,19 @@ $ npm run setup-prod-env
 
 These environment specific `.env` files will be used to set **environment variables** when deployed by the `node-lambda` module.
 
+An example of the deployment environment `.env` file:
+```console
+NYPL_DATA_API_URL=XXX
+OAUTH_PROVIDER_URL=XXX
+OAUTH_PROVIDER_SCOPE=XXX
+OAUTH_CLIENT_ID=XXX
+OAUTH_CLIENT_SECRET=XXX
+HOLD_REQUEST_SCHEMA_NAME=XXX
+HOLD_REQUEST_RESULT_STREAM_NAME=XXX
+SCSB_API_BASE_URL=XXX
+SCSB_API_KEY=XXX
+```
+
 #### Step 4: Setup your environment specific `event_sources_{environment}.json` file
 This file is used by the `node-lambda` module to deploy your Lambda with the correct mappings.
 
@@ -168,6 +181,12 @@ $ npm run lint [filename].js // Will lint the specific JS file
 
 ### NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
+* [nypl-scsb-rest-client](https://www.npmjs.com/package/@nypl/scsb-rest-client)
+* [async](https://www.npmjs.com/package/async)
+* [axios](https://www.npmjs.com/package/axios)
+* [dotenv](https://www.npmjs.com/package/dotenv)
+* [qs](https://www.npmjs.com/package/qs)
+* [winston](https://www.npmjs.com/package/winston)
 * [node-lambda](https://www.npmjs.com/package/node-lambda)
 * [mocha](https://www.npmjs.com/package/mocha)
 * [chai](https://www.npmjs.com/package/chai)
