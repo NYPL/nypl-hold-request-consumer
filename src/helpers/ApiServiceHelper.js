@@ -253,12 +253,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this.handleHttpAsyncRequests = (records, type) => {
+  this.handleHttpAsyncRequests = (records, type, accessToken) => {
     const functionName = 'handleHttpAsyncRequests';
-    // Retrieve CACHED access_token initialized at the beginning of the handler
-    const token = CACHE.getAccessToken();
 
-    if (!token || token === '') {
+    if (!access_token || accessToken === '') {
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the OAuth access_token is not defined or empty in CACHE, could not perform HTTP async requests',
@@ -289,11 +287,11 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (type === 'item-service') {
-      return this.processGetItemDataRequests(records, token);
+      return this.processGetItemDataRequests(records, accessToken);
     }
 
     if (type === 'patron-barcode-service') {
-      return this.processGetPatronBarcodeRequests(records, token);
+      return this.processGetPatronBarcodeRequests(records, accessToken);
     }
   };
 
@@ -306,7 +304,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       scope: this.scope
     };
 
-    if (!cachedToken) {
+    if (!cachedToken || cachedToken === '') {
       logger.info('fetching new access_token from OAuth Service');
       return axios
       .post(this.oauthUrl, qs.stringify(authConfig))

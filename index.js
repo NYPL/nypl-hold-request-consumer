@@ -103,19 +103,23 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       apiHelper.getTokenFromOAuthService(CACHE.getAccessToken()),
       streamsClient.decodeData(CACHE.getSchemaName(), records.map(i => i.kinesis.data))
     ]).then(result => {
-      logger.info('storing access_token in CACHE global');
-      CACHE.setAccessToken(result[0]);
+      if (result[0] !== CACHE.getAccessToken()) {
+        logger.info('storing new access_token in CACHE');
+        CACHE.setAccessToken(result[0]);
+      } else {
+        logger.info('reusing previously fetched access_token from CACHE')
+      }
 
       logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
 
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service', CACHE.getAccessToken());
     })
     .then(recordsWithItemData => {
       logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithItemData);
 
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service');
+      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service', CACHE.getAccessToken());
     })
     .then(recordsWithPatronData => {
       logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
