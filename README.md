@@ -21,7 +21,7 @@ $ npm install
 
 Once all dependencies are installed, you want to run the following NPM commands included in the `package.json` configuration file to setup a local development environment.
 
-#### Step 1: Create `.env` file for `node-lambda` module
+#### Step 1: Create an `.env` file for the `node-lambda` module
 > Copies the sample .env file under ./sample/.env.sample into ./.env
 
 ```console
@@ -56,6 +56,7 @@ PACKAGE_DIRECTORY=build
 Running the following NPM Commands will:
 
 * Set up your **LOCAL** `.env` file as `./config/local.env` used for local development
+
 ```console
 $ npm run setup-local-env // Used in local development when running `npm run local-run`
 ```
@@ -77,7 +78,7 @@ $ npm run setup-prod-env
 
 These environment specific `.env` files will be used to set **environment variables** when deployed by the `node-lambda` module.
 
-An example of the deployment environment `.env` file:
+An example of the sample deployment environment `.env` file:
 ```console
 NYPL_DATA_API_URL=XXX
 OAUTH_PROVIDER_URL=XXX
