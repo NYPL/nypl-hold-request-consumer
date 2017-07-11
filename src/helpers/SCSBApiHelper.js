@@ -34,7 +34,7 @@ const SCSBApiHelper = module.exports = {
 
     return new Promise((resolve, reject) => {
       logger.info(`starting async iteration over ${records.length} records to POST into SCSB API`);
-      async.map(records, (item, callback) => {
+      async.mapSeries(records, (item, callback) => {
         const scsbModel = SCSBApiHelper.generateSCSBModel(item);
         logger.info(`posting hold request record (${item.id}) to SCSB API`, { holdRequestId: item.id });
         return scsbClient.addRequestItem(scsbModel)

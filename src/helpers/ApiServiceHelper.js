@@ -88,7 +88,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     return new Promise((resolve, reject) => {
       logger.info(`starting async iteration over ${records.length} records to fetch Item data for each record`);
-      async.map(records, (item, callback) => {
+      async.mapSeries(records, (item, callback) => {
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
@@ -198,7 +198,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     return new Promise((resolve, reject) => {
       logger.info(`starting async iteration over ${records.length} records to fetch patron data for each record`);
-      async.map(records, (item, callback) => {
+      async.mapSeries(records, (item, callback) => {
         // Only process GET requests if the patron value is defined
         if (item.patron && item.patron !== '') {
           const patronBarcodeApi = `${nyplDataApiBaseUrl}patrons/${item.patron}/barcode`;
