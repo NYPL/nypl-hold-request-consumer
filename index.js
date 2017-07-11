@@ -3,6 +3,7 @@ const NyplStreamsClient = require('@nypl/nypl-streams-client');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
+const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
 
@@ -14,27 +15,55 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
 
   try {
-    if (!opts.schema || opts.schema === '') {
+    if (!opts.schemaName || opts.schemaName === '') {
       throw HoldRequestConsumerError({
-        message: 'missing schema name configuration parameter',
-        type: 'missing-schema-name-parameter',
+        message: 'missing schemaName configuration parameter',
+        type: 'missing-kinesis-function-parameter',
         function: functionName
       });
     }
 
-    if (!opts.apiUri || opts.apiUri === '') {
+    if (!opts.resultStreamName || opts.resultStreamName === '') {
       throw HoldRequestConsumerError({
-        message: 'missing apiUri configuration parameter',
-        type: 'missing-nypl-data-api-uri',
+        message: 'missing resultStreamName configuration parameter',
+        type: 'missing-kinesis-function-parameter',
         function: functionName
       });
     }
-    // Store the Schema Name & NYPL Data API Base Url to CACHE
-    CACHE.setSchemaName(opts.schema);
-    CACHE.setNyplDataApiBase(opts.apiUri);
+
+    if (!opts.nyplDataApiBaseUrl|| opts.nyplDataApiBaseUrl === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing nyplDataApiBaseUrl configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    if (!opts.scsbApiBaseUrl || opts.scsbApiBaseUrl === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing scsbApiBaseUrl configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    if (!opts.scsbApiKey|| opts.scsbApiKey === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing scsbApiKey configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    // Store configuration and ENV variables to global CACHE object
+    CACHE.setSchemaName(opts.schemaName);
+    CACHE.setResultStreamName(opts.resultStreamName);
+    CACHE.setNyplDataApiBaseUrl(opts.nyplDataApiBaseUrl);
+    CACHE.setSCSBApiBaseUrl(opts.scsbApiBaseUrl);
+    CACHE.setSCSBApiKey(opts.scsbApiKey);
 
     const hrcModel = new HoldRequestConsumerModel();
-    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: CACHE.getNyplDataApiBase() });
+    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: CACHE.getNyplDataApiBaseUrl() });
     const apiHelper = new ApiServiceHelper(
       process.env.OAUTH_PROVIDER_URL,
       process.env.OAUTH_CLIENT_ID,
@@ -64,11 +93,20 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithPatronData);
 
-      console.log(hrcModel.getRecords());
+      return SCSBApiHelper.handlePostingRecordsToSCSBApi(
+        hrcModel.getRecords(),
+        CACHE.getSCSBApiBaseUrl(),
+        CACHE.getSCSBApiKey()
+      );
+    })
+    .then(resultsOfRecordswithScsbResponse => {
+      logger.info('storing updated records containing SCSB API response to HoldRequestConsumerModel');
+      hrcModel.setRecords(resultsOfRecordswithScsbResponse);
+      console.log('SCSB RESPONSE:', hrcModel.getRecords());
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
-      console.log(error);
+      logger.error('A fatal error occured, Hold Request Consumer Lambda needs to be restarted', { error: error });
 
       // Handle Avro Errors which prevents the Lambda from decoding data to process
       if (error.name === 'AvroValidationError') {
@@ -102,7 +140,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
   } catch (error) {
     logger.error(
       error.errorMessage,
-      { type: error.errorType, function: error.function }
+      { type: error.errorType, function: error.function, debug: error }
     );
   }
 };
@@ -113,7 +151,12 @@ exports.handler = (event, context, callback) => {
   if (record.kinesis && record.kinesis.data) {
     exports.kinesisHandler(
       event.Records,
-      { schema: process.env.HOLD_REQUEST_SCHEMA_NAME, apiUri: process.env.NYPL_DATA_API_URL },
+      { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
+        resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+        nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
+        scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
+        scsbApiKey: process.env.SCSB_API_KEY
+      },
       context,
       callback
     );

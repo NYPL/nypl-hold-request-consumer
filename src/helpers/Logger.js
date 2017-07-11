@@ -29,6 +29,10 @@ const logger = new winston.Logger({
           level: options.level.toUpperCase()
         };
 
+        if (process.pid) {
+          result.pid = process.pid.toString();
+        }
+
         if (options.message) {
           result.message = options.message;
         }
@@ -42,10 +46,6 @@ const logger = new winston.Logger({
           if (options.meta && Object.keys(options.meta).length) {
             result.meta = JSON.stringify(options.meta);
           }
-        }
-
-        if (process.pid) {
-          result.pid = process.pid.toString();
         }
 
         return JSON.stringify(result);
