@@ -7,10 +7,6 @@ const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
 
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config({ path: './config/local.env' });
-};
-
 exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
 

@@ -185,7 +185,6 @@ $ npm run lint [filename].js // Will lint the specific JS file
 * [nypl-scsb-rest-client](https://www.npmjs.com/package/@nypl/scsb-rest-client)
 * [async](https://www.npmjs.com/package/async)
 * [axios](https://www.npmjs.com/package/axios)
-* [dotenv](https://www.npmjs.com/package/dotenv)
 * [qs](https://www.npmjs.com/package/qs)
 * [winston](https://www.npmjs.com/package/winston)
 * [node-lambda](https://www.npmjs.com/package/node-lambda)
