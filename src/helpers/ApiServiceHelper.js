@@ -34,43 +34,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       this.clientSecret !== '' || this.scope !== '');
   };
 
-  this.handleErrorCodesFallback = (errorObj, holdRequestId, serviceName, callback) => {
-    const functionName = 'handleErrorCodesFallback';
-    const errorMessage = `an error was received from the ${serviceName} for HoldRequestId: ${holdRequestId}`;
-
-    if (errorObj.response) {
-      // If the status code is 401, we know the OAuth token expired, we want to exit out of the
-      // promise chain and restart the kinesis handler to get a new token.
-      if (errorObj.response.status === 401) {
-        return callback(
-          HoldRequestConsumerError({
-            message: errorMessage,
-            type: 'access-token-invalid',
-            status: errorObj.response.status,
-            function: functionName,
-            error: errorObj.response
-          })
-        );
-      }
-
-      // Obtained when the SCOPES are invalid, exit the promise chain and restart the handler
-      if (errorObj.response.status === 403) {
-        return callback(
-          HoldRequestConsumerError({
-            message: errorMessage,
-            type: 'access-forbidden-for-scopes',
-            status: errorObj.response.status,
-            function: functionName,
-            error: errorObj.response
-          })
-        );
-      }
-    }
-
-    // Continue processing records
-    return callback(null);
-  };
-
   this.processGetItemDataRequests = (records, token) => {
     const functionName = 'processGetItemDataRequests';
     const nyplDataApiBaseUrl = CACHE.getNyplDataApiBaseUrl();
@@ -80,7 +43,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the NYPL Data API base url not defined in CACHE',
-          type: 'undefined-nypl-data-api-base-url',
+          type: 'undefined-cached-variable',
           function: functionName
         })
       );
@@ -119,7 +82,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
                 { holdRequestId: item.id }
               );
 
-              this.handleErrorCodesFallback(error, item.id, 'Item Service', callback);
+              ResultStreamHelper.handleErrorCodesFallback(error, item.id, 'Item Service', callback);
             })
             .catch(err => {
               logger.error(
@@ -131,7 +94,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               // We are exiting the promise chain and restarting the kinesis handler
               return callback(HoldRequestConsumerError({
                 message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-                type: 'hold-request-results-stream-error',
+                type: 'hold-request-result-stream-error',
                 status: err.response && err.response.status ? err.response.status : null,
                 function: 'postRecordToStream',
                 error: err
@@ -169,7 +132,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           // We are exiting the promise chain and restarting the kinesis handler
           return callback(HoldRequestConsumerError({
             message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-            type: 'hold-request-results-stream-error',
+            type: 'hold-request-result-stream-error',
             status: err.response && err.response.status ? err.response.status : null,
             function: 'postRecordToStream',
             error: err
@@ -190,7 +153,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the NYPL Data API base url not defined in CACHE',
-          type: 'undefined-nypl-data-api-base-url',
+          type: 'undefined-cached-variable',
           function: functionName
         })
       );
@@ -228,7 +191,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
                 { holdRequestId: item.id }
               );
 
-              this.handleErrorCodesFallback(error, item.id, 'Patron Service', callback);
+              ResultStreamHelper.handleErrorCodesFallback(error, item.id, 'Patron Service', callback);
             })
             .catch(err => {
               logger.error(
@@ -240,7 +203,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               // We are exiting the promise chain and restarting the kinesis handler
               return callback(HoldRequestConsumerError({
                 message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-                type: 'hold-request-results-stream-error',
+                type: 'hold-request-result-stream-error',
                 status: err.response && err.response.status ? err.response.status : null,
                 function: 'postRecordToStream',
                 error: err
@@ -278,7 +241,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           // We are exiting the promise chain and restarting the kinesis handler
           return callback(HoldRequestConsumerError({
             message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResults stream; exiting promise chain due to fatal error`,
-            type: 'hold-request-results-stream-error',
+            type: 'hold-request-result-stream-error',
             status: err.response && err.response.status ? err.response.status : null,
             function: 'postRecordToStream',
             error: err
@@ -298,8 +261,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (!token || token === '') {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the OAuth access_token is not defined or empty, could not perform HTTP async requests',
-          type: 'undefined-access-token-from-cache',
+          message: 'the OAuth access_token is not defined or empty in CACHE, could not perform HTTP async requests',
+          type: 'undefined-cached-variable',
           function: functionName
         })
       );
@@ -309,7 +272,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the hold requests records array is empty',
-          type: 'empty-records-array-parameter',
+          type: 'empty-function-parameter',
           function: functionName
         })
       );
@@ -319,7 +282,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the type parameter is not defined or empty',
-          type: 'undefined-type-parameter',
+          type: 'undefined-function-parameter',
           function: functionName
         })
       );
@@ -343,18 +306,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       scope: this.scope
     };
 
-    if (!this.areRequiredParamsValid()) {
-      logger.error(
-        `required OAuth parameters are not defined in function: ${functionName}`,
-        { params: 'client_id, client_secret, grant_type, scope' }
-      );
-      return Promise.reject(HoldRequestConsumerError({
-        message: 'OAuth required parameters are not defined',
-        type: 'undefined-oauth-required-parameters',
-        function: functionName
-      }));
-    }
-
     if (!cachedToken) {
       logger.info('fetching new access_token from OAuth Service');
       return axios
@@ -366,10 +317,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         }
 
         // We obtained a valid response. However, we could not get a value from access_token
-        logger.error(`missing access_token value from OAuth Service response in function: ${functionName}`);
+        logger.error(`empty access_token value from OAuth Service response in function: ${functionName}`);
         return Promise.reject(HoldRequestConsumerError({
-          message: 'missing access_token value from OAuth Service',
-          type: 'missing-access-token-from-oauth-service',
+          message: 'empty access_token value from OAuth Service',
+          type: 'empty-access-token-from-oauth-service',
           function: functionName
         }));
       })

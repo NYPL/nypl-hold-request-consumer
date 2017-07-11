@@ -14,8 +14,8 @@ const ResultStreamHelper = module.exports = {
     if (!obj.holdRequestId || obj.holdRequestId === '') {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the hold request id is not defined for the record, unable to post failed record to stream',
-          type: 'undefined-hold-request-id',
+          message: 'the holdRequestId object property from the object parameter is not defined, unable to post record to stream',
+          type: 'undefined-function-parameter',
           function: functionName
         })
       );
@@ -24,8 +24,8 @@ const ResultStreamHelper = module.exports = {
     if (!streamName) {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the stream name used to post results is undefined',
-          type: 'undefined-stream-name',
+          message: 'the streamName parameter used to post results is undefined',
+          type: 'undefined-function-parameter',
           function: functionName
         })
       );
@@ -46,5 +46,52 @@ const ResultStreamHelper = module.exports = {
     }
 
     return streamsClient.write(streamName, objectToBePosted);
+  },
+  handleErrorCodesFallback: (errorObj, holdRequestId, serviceName, callback) => {
+    const functionName = 'handleErrorCodesFallback';
+    const errorMessage = `an error was received from the ${serviceName} for HoldRequestId: ${holdRequestId}`;
+    const errorType = (serviceName !== '') ? serviceName.replace(/\s+/g, '-').toLowerCase() + '-error' : 'service-error';
+    if (errorObj.response) {
+      // If the status code is 401, we know the OAuth token expired, we want to exit out of the
+      // promise chain and restart the kinesis handler to get a new token.
+      if (errorObj.response.status === 401) {
+        return callback(
+          HoldRequestConsumerError({
+            message: errorMessage,
+            type: 'access-token-invalid',
+            status: errorObj.response.status,
+            function: functionName,
+            error: errorObj.response
+          })
+        );
+      }
+      if (errorObj.response.status === 403) {
+        // Obtained when the SCOPES are invalid, exit the promise chain and restart the handler
+        return callback(
+          HoldRequestConsumerError({
+            message: errorMessage,
+            type: 'access-forbidden-for-scopes',
+            status: errorObj.response.status,
+            function: functionName,
+            error: errorObj.response
+          })
+        );
+      }
+
+      if (errorObj.response.status !== 404) {
+        return callback(
+          HoldRequestConsumerError({
+            message: errorMessage,
+            type: errorType,
+            status: errorObj.response.status,
+            function: functionName,
+            error: errorObj.response
+          })
+        );
+      }
+    }
+
+    // Continue processing records, mainly for 404 server responses
+    return callback(null);
   }
 };

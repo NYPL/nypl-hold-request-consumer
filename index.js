@@ -55,6 +55,38 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
+    if (!opts.oAuthProviderUrl|| opts.oAuthProviderUrl === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing oAuthProviderUrl configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    if (!opts.oAuthClientId|| opts.oAuthClientId === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing oAuthClientId configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    if (!opts.oAuthClientSecret|| opts.oAuthClientSecret === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing oAuthClientSecret configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
+    if (!opts.oAuthProviderScope|| opts.oAuthProviderScope === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing oAuthProviderScope configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
     // Store configuration and ENV variables to global CACHE object
     CACHE.setSchemaName(opts.schemaName);
     CACHE.setResultStreamName(opts.resultStreamName);
@@ -65,10 +97,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     const hrcModel = new HoldRequestConsumerModel();
     const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: CACHE.getNyplDataApiBaseUrl() });
     const apiHelper = new ApiServiceHelper(
-      process.env.OAUTH_PROVIDER_URL,
-      process.env.OAUTH_CLIENT_ID,
-      process.env.OAUTH_CLIENT_SECRET,
-      process.env.OAUTH_PROVIDER_SCOPE
+      opts.oAuthProviderUrl,
+      opts.oAuthClientId,
+      opts.oAuthClientSecret,
+      opts.oAuthProviderScope
     );
 
     Promise.all([
@@ -102,45 +134,77 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .then(resultsOfRecordswithScsbResponse => {
       logger.info('storing updated records containing SCSB API response to HoldRequestConsumerModel');
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
-      console.log('SCSB RESPONSE:', hrcModel.getRecords());
+      return callback(null, 'successfully processed hold request records to SCSB API');
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
-      logger.error('A fatal error occured, Hold Request Consumer Lambda needs to be restarted', { error: error });
+      logger.error('A possible fatal error occured, the Hold Request Consumer Lambda will handle retries based on the error types', { debugInfo: error });
 
-      // Handle Avro Errors which prevents the Lambda from decoding data to process
+      // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
-          'restarting the HoldRequestConsumer Lambda; obtained an AvroValidationError which prohibits decoding kinesis stream',
-          { error: error.message }
+          'A fatal/non-recoverable AvroValidationError occured which prohibits decoding kinesis stream; Hold Request Consumer Lambda will NOT restart',
+          { debugInfo: error.message }
         );
       }
 
-      // Handle errors from HoldRequestProcessed Stream
-      // Occurs when a Hold Request record could not be posted to the Results Stream
-      if (error.errorType === 'hold-request-results-stream-error') {
-        // Stop the execution of the stream, restart handler.
-        logger.error('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream');
-      }
+      if (error.name = 'HoldRequestConsumerError') {
+        // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
+        if (error.errorType === 'hold-request-result-stream-error') {
+          logger.error('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream', { debugInfo: error });
+          return callback(error);
+        }
 
-      // Handle OAuth Token expired error
-      if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
-        // Stop the execution of the stream, restart handler.
-        logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests');
-        logger.info('setting the cached acccess_token to null before Lambda restart');
-        CACHE.setAccessToken(null);
-      }
+        // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
+        if (error.errorType === 'oauth-service-error' && error.errorStatus >= 500) {
+          logger.error('restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code', { debugInfo: error });
+          return callback(error);
+        }
 
-      if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
-        logger.error('restarting the HoldRequestConsumer Lambda; scopes are forbidden, cannot continue fulfilling NYPL Data API requests');
-      }
+        // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
+        if (error.errorType === 'patron-service-error' && error.errorStatus >= 500) {
+          logger.error('restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code', { debugInfo: error });
+          return callback(error);
+        }
 
-      // return callback(error);
+        // Recoverable Error: The S Service might be down, will attempt to restart handler.
+        if (error.errorType === 'service-error' && error.errorStatus >= 500) {
+          logger.error('restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code', { debugInfo: error });
+          return callback(error);
+        }
+
+        // Recoverable Error: The Item Service might be down, will attempt to restart handler.
+        if (error.errorType === 'item-service-error' && error.errorStatus >= 500) {
+          logger.error('restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code', { debugInfo: error });
+          return callback(error);
+        }
+
+        // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
+        if (error.errorType === 'empty-access-token-from-oauth-service') {
+          logger.error('restarting the HoldRequestConsumer Lambda; the OAuth service returned a 200 response but the access_token value is empty', { debugInfo: error });
+          return callback(error);
+        }
+
+        // Recoverable Error: OAuth Token expired error
+        if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
+          // Stop the execution of the stream, restart handler.
+          logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests', { debugInfo: error });
+          logger.info('setting the cached acccess_token to null before Lambda restart');
+          CACHE.setAccessToken(null);
+          return callback(error);
+        }
+
+        // Non-recoverable Error: The permissions scopes are invalid which originate from the .env file
+        if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
+          logger.error('restarting the HoldRequestConsumer Lambda; scopes are forbidden, cannot continue fulfilling NYPL Data API requests', { debugInfo: error });
+        }
+      }
     });
   } catch (error) {
+    // Non-recoverable Error: Function arguments are missing from .env file -- cannot begin promise chain without them
     logger.error(
       error.errorMessage,
-      { type: error.errorType, function: error.function, debug: error }
+      { type: error.errorType, function: error.function, debugInfo: error }
     );
   }
 };
@@ -155,7 +219,11 @@ exports.handler = (event, context, callback) => {
         resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
         nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
         scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
-        scsbApiKey: process.env.SCSB_API_KEY
+        scsbApiKey: process.env.SCSB_API_KEY,
+        oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
+        oAuthClientId: process.env.OAUTH_CLIENT_ID,
+        oAuthClientSecret: process.env.OAUTH_CLIENT_SECRET,
+        oAuthProviderScope: process.env.OAUTH_PROVIDER_SCOPE
       },
       context,
       callback
