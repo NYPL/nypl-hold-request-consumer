@@ -27,7 +27,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.nyplDataApiBaseUrl|| opts.nyplDataApiBaseUrl === '') {
+    if (!opts.nyplDataApiBaseUrl || opts.nyplDataApiBaseUrl === '') {
       throw HoldRequestConsumerError({
         message: 'missing nyplDataApiBaseUrl configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -43,7 +43,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.scsbApiKey|| opts.scsbApiKey === '') {
+    if (!opts.scsbApiKey || opts.scsbApiKey === '') {
       throw HoldRequestConsumerError({
         message: 'missing scsbApiKey configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -51,7 +51,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.oAuthProviderUrl|| opts.oAuthProviderUrl === '') {
+    if (!opts.oAuthProviderUrl || opts.oAuthProviderUrl === '') {
       throw HoldRequestConsumerError({
         message: 'missing oAuthProviderUrl configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -59,7 +59,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.oAuthClientId|| opts.oAuthClientId === '') {
+    if (!opts.oAuthClientId || opts.oAuthClientId === '') {
       throw HoldRequestConsumerError({
         message: 'missing oAuthClientId configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -67,7 +67,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.oAuthClientSecret|| opts.oAuthClientSecret === '') {
+    if (!opts.oAuthClientSecret || opts.oAuthClientSecret === '') {
       throw HoldRequestConsumerError({
         message: 'missing oAuthClientSecret configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -75,7 +75,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
-    if (!opts.oAuthProviderScope|| opts.oAuthProviderScope === '') {
+    if (!opts.oAuthProviderScope || opts.oAuthProviderScope === '') {
       throw HoldRequestConsumerError({
         message: 'missing oAuthProviderScope configuration parameter',
         type: 'missing-kinesis-function-parameter',
@@ -100,26 +100,33 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     );
 
     Promise.all([
-      apiHelper.getTokenFromOAuthService(CACHE.getAccessToken()),
+      apiHelper.setTokenFromOAuthService(),
       streamsClient.decodeData(CACHE.getSchemaName(), records.map(i => i.kinesis.data))
     ]).then(result => {
-      if (result[0] !== CACHE.getAccessToken()) {
-        logger.info('storing new access_token in CACHE');
-        CACHE.setAccessToken(result[0]);
-      } else {
-        logger.info('reusing previously fetched access_token from CACHE')
+      if (result[0] === 'access-token-exists-in-cache') {
+        logger.info('reusing access_token already defined in CACHE, no API call to OAuth Service was executed');
       }
 
       logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(result[1]);
 
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'item-service', CACHE.getAccessToken());
+      return apiHelper.handleHttpAsyncRequests(
+        hrcModel.getRecords(),
+        'item-service',
+        CACHE.getNyplDataApiBaseUrl(),
+        CACHE.getAccessToken()
+      );
     })
     .then(recordsWithItemData => {
       logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
       hrcModel.setRecords(recordsWithItemData);
 
-      return apiHelper.handleHttpAsyncRequests(hrcModel.getRecords(), 'patron-barcode-service', CACHE.getAccessToken());
+      return apiHelper.handleHttpAsyncRequests(
+        hrcModel.getRecords(),
+        'patron-barcode-service',
+        CACHE.getNyplDataApiBaseUrl(),
+        CACHE.getAccessToken()
+      );
     })
     .then(recordsWithPatronData => {
       logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
@@ -133,8 +140,8 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     })
     .then(resultsOfRecordswithScsbResponse => {
       logger.info('storing updated records containing SCSB API response to HoldRequestConsumerModel');
+      logger.info('successfully processed hold request records to SCSB API');
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
-
       return callback(null, 'successfully processed hold request records to SCSB API');
     })
     .catch(error => {

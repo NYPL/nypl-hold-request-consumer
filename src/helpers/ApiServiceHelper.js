@@ -253,18 +253,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this.handleHttpAsyncRequests = (records, type, accessToken) => {
+  this.handleHttpAsyncRequests = (records, type, apiUrl, accessToken) => {
     const functionName = 'handleHttpAsyncRequests';
-
-    if (!access_token || accessToken === '') {
-      return Promise.reject(
-        HoldRequestConsumerError({
-          message: 'the OAuth access_token is not defined or empty in CACHE, could not perform HTTP async requests',
-          type: 'undefined-cached-variable',
-          function: functionName
-        })
-      );
-    }
 
     if (!records.length) {
       return Promise.reject(
@@ -275,6 +265,27 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         })
       );
     }
+
+    if (!accessToken || accessToken === '') {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the accessToken parameter is not defined, could not execute HTTP async requests without a valid access_token',
+          type: 'undefined-function-parameter',
+          function: functionName
+        })
+      );
+    }
+
+    if (!apiUrl || apiUrl === '') {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the API url parameter not defined , could not execute HTTP async requests without a valid API url',
+          type: 'undefined-function-parameter',
+          function: functionName
+        })
+      );
+    }
+
 
     if (!type || type === '') {
       return Promise.reject(
@@ -287,16 +298,16 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (type === 'item-service') {
-      return this.processGetItemDataRequests(records, accessToken);
+      return this.processGetItemDataRequests(records, accessToken, apiUrl);
     }
 
     if (type === 'patron-barcode-service') {
-      return this.processGetPatronBarcodeRequests(records, accessToken);
+      return this.processGetPatronBarcodeRequests(records, accessToken, apiUrl);
     }
   };
 
-  this.getTokenFromOAuthService = (cachedToken) => {
-    const functionName = 'getTokenFromOAuthService';
+  this.setTokenFromOAuthService = () => {
+    const functionName = 'setTokenFromOAuthService';
     const authConfig = {
       client_id: this.clientId,
       client_secret: this.clientSecret,
@@ -304,14 +315,17 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       scope: this.scope
     };
 
+    const cachedToken = CACHE.getAccessToken();
+
     if (!cachedToken || cachedToken === '') {
-      logger.info('fetching new access_token from OAuth Service');
+      logger.info('fetching new access_token from OAuth Service; CACHED access_token is not defined');
       return axios
       .post(this.oauthUrl, qs.stringify(authConfig))
       .then((response) => {
         if (response && response.data && response.data.access_token) {
-          logger.info('successfully obtained a new access_token from OAuth Service');
-          return response.data.access_token;
+          logger.info('successfully obtained a new access_token from OAuth Service, saved access_token to CACHE');
+          CACHE.setAccessToken(response.data.access_token);
+          return 'new-access-token-set';
         }
 
         // We obtained a valid response. However, we could not get a value from access_token
@@ -360,10 +374,9 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           function: functionName
         }));
       })
-    } else {
-      logger.info('already obtained an access_token from CACHE, not executing call to get token from OAuth Service');
-      Promise.resolve(cachedToken);
     }
+
+    return Promise.resolve('access-token-exists-in-cache');
   };
 }
 

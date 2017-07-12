@@ -87,6 +87,7 @@ const SCSBApiHelper = module.exports = {
                 `posted failed hold request record (${item.id}) to HoldRequestResult stream; success flag is FALSE for hold request record, assigned response to existing record`,
                 { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
               );
+              return callback(null, item);
             })
             .catch(err => {
               logger.error(
@@ -104,8 +105,6 @@ const SCSBApiHelper = module.exports = {
                 error: err
               }));
             });
-
-            return callback(null, item);
           }
         })
         .catch(error => {
