@@ -48,6 +48,7 @@ const ResultStreamHelper = module.exports = {
     return streamsClient.write(streamName, objectToBePosted);
   },
   handleErrorCodesFallback: (errorObj, holdRequestId, serviceName, callback) => {
+    console.log(errorObj);
     const functionName = 'handleErrorCodesFallback';
     const errorMessage = `an error was received from the ${serviceName} for HoldRequestId: ${holdRequestId}`;
     const errorType = (serviceName !== '') ? serviceName.replace(/\s+/g, '-').toLowerCase() + '-error' : 'service-error';

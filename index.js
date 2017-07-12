@@ -250,6 +250,17 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             'the HoldRequestConsumer Lambda caught a FATAL error and will NOT restart; OAuth scopes are forbidden, cannot continue fulfilling NYPL Data API requests',
             { debugInfo: error }
           );
+
+          return false;
+        }
+
+        if (error.errorStatus !== 401) {
+          logger.error(
+            'the HoldRequestConsumer Lambda caught a FATAL error and will NOT restart; the reponse statusCode is NOT 401 OR 5XX (recoverable errors)',
+            { debugInfo: error }
+          );
+
+          return false;
         }
       }
     });

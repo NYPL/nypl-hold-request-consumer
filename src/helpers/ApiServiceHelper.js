@@ -62,7 +62,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               errorMessage: `unable to retrieve Item data from Item Service for hold request record (${item.id})`
             })
             .then(res => {
-              logger.error(
+              logger.info(
                 `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
                 { holdRequestId: item.id }
               );
