@@ -256,7 +256,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
   } catch (error) {
     // Non-recoverable Error: Function arguments are missing from .env file -- cannot begin promise chain without them
     logger.error(
-      error.errorMessage,
+      `Fatal Error: ${error.errorMessage}`,
       { type: error.errorType, function: error.function, debugInfo: error }
     );
   }
