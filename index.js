@@ -146,13 +146,16 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, 'successfully processed hold request records to SCSB API');
     })
     .catch(error => {
-      // Handling Errors From Promise Chain, these errors are non-recoverable (fatal) and must stop the handler from executing
-      logger.error('A possible fatal error occured, the Hold Request Consumer Lambda will handle retries based on the error types', { debugInfo: error });
+      // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
+      logger.error(
+        'A possible fatal error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
+        { debugInfo: error }
+      );
 
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
-          'A fatal/non-recoverable AvroValidationError occured which prohibits decoding kinesis stream; Hold Request Consumer Lambda will NOT restart',
+          'A fatal/non-recoverable AvroValidationError occured which prohibits decoding the kinesis stream; Hold Request Consumer Lambda will NOT restart',
           { debugInfo: error.message }
         );
       }
@@ -160,31 +163,61 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       if (error.name = 'HoldRequestConsumerError') {
         // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
         if (error.errorType === 'hold-request-result-stream-error') {
-          logger.error('restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult Stream', { debugInfo: error });
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult stream',
+            { debugInfo: error }
+          );
+
           return callback(error);
         }
 
         // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
         if (error.errorType === 'oauth-service-error' && error.errorStatus >= 500) {
-          logger.error('restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code', { debugInfo: error });
-          return callback(error);
-        }
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code',
+            { debugInfo: error }
+          );
 
-        // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
-        if (error.errorType === 'patron-service-error' && error.errorStatus >= 500) {
-          logger.error('restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code', { debugInfo: error });
-          return callback(error);
-        }
-
-        // Recoverable Error: The S Service might be down, will attempt to restart handler.
-        if (error.errorType === 'service-error' && error.errorStatus >= 500) {
-          logger.error('restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code', { debugInfo: error });
           return callback(error);
         }
 
         // Recoverable Error: The Item Service might be down, will attempt to restart handler.
         if (error.errorType === 'item-service-error' && error.errorStatus >= 500) {
-          logger.error('restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code', { debugInfo: error });
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return callback(error);
+        }
+
+        // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
+        if (error.errorType === 'patron-service-error' && error.errorStatus >= 500) {
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return callback(error);
+        }
+
+        // Recoverable Error: The SCSB Service might be down, will attempt to restart handler.
+        if (error.errorType === 'scsb-api-error' && error.errorStatus >= 500) {
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the SCSB API Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return callback(error);
+        }
+
+        // Recoverable Error: A Service might be down, will attempt to restart handler.
+        if (error.errorType === 'service-error' && error.errorStatus >= 500) {
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
           return callback(error);
         }
 
