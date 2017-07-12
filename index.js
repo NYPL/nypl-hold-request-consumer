@@ -223,22 +223,33 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
         if (error.errorType === 'empty-access-token-from-oauth-service') {
-          logger.error('restarting the HoldRequestConsumer Lambda; the OAuth service returned a 200 response but the access_token value is empty', { debugInfo: error });
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 200 response but the access_token value is empty',
+            { debugInfo: error }
+          );
+
           return callback(error);
         }
 
         // Recoverable Error: OAuth Token expired error
         if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
-          // Stop the execution of the stream, restart handler.
-          logger.error('restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests', { debugInfo: error });
-          logger.info('setting the cached acccess_token to null before Lambda restart');
+          logger.error(
+            'restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests',
+            { debugInfo: error }
+          );
+
+          logger.info('setting the CACHED acccess_token to null before restarting the HoldRequestConsumer Lambda');
           CACHE.setAccessToken(null);
+
           return callback(error);
         }
 
         // Non-recoverable Error: The permissions scopes are invalid which originate from the .env file
         if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
-          logger.error('restarting the HoldRequestConsumer Lambda; scopes are forbidden, cannot continue fulfilling NYPL Data API requests', { debugInfo: error });
+          logger.error(
+            'the HoldRequestConsumer Lambda caught a FATAL error and will NOT restart; OAuth scopes are forbidden, cannot continue fulfilling NYPL Data API requests',
+            { debugInfo: error }
+          );
         }
       }
     });
