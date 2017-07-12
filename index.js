@@ -139,11 +139,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(resultsOfRecordswithScsbResponse => {
-      logger.info('storing updated records containing SCSB API response to HoldRequestConsumerModel');
-      logger.info('successfully processed hold request records to SCSB API');
+      logger.info('successfully processed hold request records; no fatal errors occured');
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
       // console.log(hrcModel.getRecords(), resultsOfRecordswithScsbResponse);
-      return callback(null, 'successfully processed hold request records to SCSB API');
+      return callback(null, 'successfully processed hold request records; no fatal errors occured');
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
