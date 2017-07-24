@@ -234,6 +234,13 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   this.handleHttpAsyncRequests = (records, type, apiUrl, accessToken) => {
     const functionName = 'handleHttpAsyncRequests';
 
+    // Filter out records from stream with a processed flag of true since these were posted to the stream via
+    // the PATCH /api/v0.1/hold-requests endpoint which have already been sent to SCSB.
+    logger.info(`filter records array to only unprocessed requests. will be empty if all requests have been processed.`);
+    records = records.filter(function (record) {
+      return record.processed === false;
+    });
+
     if (!records.length) {
       return Promise.reject(
         HoldRequestConsumerError({
