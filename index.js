@@ -107,8 +107,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         logger.info('reusing access_token already defined in CACHE, no API call to OAuth Service was executed');
       }
 
-      logger.info('storing decoded kinesis records to HoldRequestConsumerModel');
-      hrcModel.setRecords(result[1]);
+      // Filter out records a processed flag of true before storing to prevent re-processing.
+      var filteredRecords = apiHelper.filterProcessedRecords(result[1]);
+      logger.info(`total records decoded: ${result[1].length}; total records to process: ${filteredRecords.length}`);
+
+      logger.info('storing decoded/filtered kinesis records to HoldRequestConsumerModel');
+      hrcModel.setRecords(filteredRecords);
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),

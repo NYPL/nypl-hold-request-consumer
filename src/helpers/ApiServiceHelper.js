@@ -356,6 +356,28 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     return Promise.resolve('access-token-exists-in-cache');
   };
+
+  this.filterProcessedRecords = (records) => {
+    const functionName = 'filterProcessedRecords';
+
+    if (!records.length) {
+      return Promise.reject(
+          HoldRequestConsumerError({
+            message: 'no records to filter. An empty array was passed.',
+            type: 'empty-function-parameter',
+            function: functionName
+          })
+      );
+    }
+
+    if (records.length > 0) {
+      logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
+      return unprocessedRecords = records.filter(function (record) {
+        return record.processed === false;
+      });
+    }
+
+  }
 }
 
 module.exports = ApiServiceHelper;
