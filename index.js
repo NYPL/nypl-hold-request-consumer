@@ -163,7 +163,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         );
       }
 
-      if (error.name = 'HoldRequestConsumerError') {
+      if (error.name === 'HoldRequestConsumerError') {
         // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
         if (error.errorType === 'hold-request-result-stream-error') {
           logger.error(

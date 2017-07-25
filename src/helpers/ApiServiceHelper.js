@@ -71,7 +71,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             })
             .catch(err => {
               logger.error(
-                'unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error',
+                `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
                 { holdRequestId: item.id, error: err }
               );
 
@@ -264,7 +264,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-
     if (!type || type === '') {
       return Promise.reject(
         HoldRequestConsumerError({
@@ -372,11 +371,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     if (records.length > 0) {
       logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
-      return unprocessedRecords = records.filter(function (record) {
+      return records.filter(function (record) {
         return record.processed === false;
       });
     }
-
   }
 }
 

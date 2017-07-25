@@ -128,10 +128,10 @@ const SCSBApiHelper = module.exports = {
             );
 
             return ResultStreamHelper.postRecordToStream({
-                holdRequestId: item.id,
-                jobId: item.jobId,
-                errorType: 'scsb-api-error',
-                errorMessage: `the SCSB API responded with an error while processing hold request record: ${item.id}`
+              holdRequestId: item.id,
+              jobId: item.jobId,
+              errorType: 'scsb-api-error',
+              errorMessage: `the SCSB API responded with an error while processing hold request record: ${item.id}`
             })
             .then(success => {
               logger.info(
