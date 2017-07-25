@@ -369,12 +369,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       );
     }
 
-    if (records.length > 0) {
-      logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
-      return records.filter(function (record) {
-        return record.processed === false;
-      });
-    }
+    logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
+    return records.filter(function (record) {
+      return record.processed === true;
+    });
   }
 }
 
