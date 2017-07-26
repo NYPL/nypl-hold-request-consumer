@@ -371,7 +371,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
     return records.filter(function (record) {
-      return record.processed === true;
+      return record.processed === false;
     });
   }
 }
