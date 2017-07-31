@@ -2,7 +2,6 @@
 const async = require('async');
 const axios = require('axios');
 const qs = require('qs');
-const NyplStreamsClient = require('@nypl/nypl-streams-client');
 const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const ResultStreamHelper = require('../helpers/ResultStreamHelper')
 const logger = require('../helpers/Logger');
@@ -30,7 +29,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   };
 
   this.processGetItemDataRequests = (records, token, apiUrl) => {
-    const functionName = 'processGetItemDataRequests';
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -130,7 +128,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   };
 
   this.processGetPatronBarcodeRequests = (records, token, apiUrl) => {
-    const functionName = 'processGetPatronBarcodeRequests';
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -355,25 +352,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     return Promise.resolve('access-token-exists-in-cache');
   };
-
-  this.filterProcessedRecords = (records) => {
-    const functionName = 'filterProcessedRecords';
-
-    if (!records.length) {
-      return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'no records to filter. An empty array was passed.',
-            type: 'empty-function-parameter',
-            function: functionName
-          })
-      );
-    }
-
-    logger.info(`filtering out records with a processed flag equal to true. may result in an empty array.`);
-    return records.filter(function (record) {
-      return record.processed === false;
-    });
-  }
 }
 
 module.exports = ApiServiceHelper;

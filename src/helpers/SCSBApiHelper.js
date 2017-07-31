@@ -165,7 +165,7 @@ const SCSBApiHelper = module.exports = {
             });
           });
         } else {
-          logger.info(`hold request record ($item.id) was initiated from SCSB UI, will not process POST request`);
+          logger.info(`hold request record (${item.id}) was initiated from SCSB UI, will not process POST request`);
           return callback(null, item);
         }
       }, (err, results) => {

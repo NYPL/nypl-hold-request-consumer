@@ -107,12 +107,11 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         logger.info('reusing access_token already defined in CACHE, no API call to OAuth Service was executed');
       }
 
-      // Filter out records a processed flag of true before storing to prevent re-processing.
-      var filteredRecords = apiHelper.filterProcessedRecords(result[1]);
-      logger.info(`total records decoded: ${result[1].length}; total records to process: ${filteredRecords.length}`);
-
+      return hrcModel.filterProcessedRecords(result[1]);
+    })
+    .then(filteredRecordsToProcess => {
       logger.info('storing decoded/filtered kinesis records to HoldRequestConsumerModel');
-      hrcModel.setRecords(filteredRecords);
+      hrcModel.setRecords(filteredRecordsToProcess);
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),
@@ -143,14 +142,15 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(resultsOfRecordswithScsbResponse => {
-      logger.info('successfully processed hold request records; no fatal errors occured');
+      const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
+      logger.info(successMsg);
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
       // console.log(hrcModel.getRecords(), resultsOfRecordswithScsbResponse);
-      return callback(null, 'successfully processed hold request records; no fatal errors occured');
+      return callback(null, successMsg);
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
-      logger.error(
+      logger.warning(
         'A possible fatal error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
         { debugInfo: error }
       );
@@ -164,6 +164,15 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       }
 
       if (error.name === 'HoldRequestConsumerError') {
+        if (error.errorType === 'empty-filtered-records') {
+          logger.error(
+            'the filtered hold request records array was empty which signifies all records contained the proccessed flag as TRUE; the Lambda will not continue to proccess an empty array of records',
+            { debugInfo: error }
+          );
+
+          return false;
+        }
+
         // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
         if (error.errorType === 'hold-request-result-stream-error') {
           logger.error(
