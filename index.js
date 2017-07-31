@@ -165,7 +165,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       if (error.name === 'HoldRequestConsumerError') {
         if (error.errorType === 'empty-filtered-records') {
-          logger.error(
+          logger.warning(
             'the filtered hold request records array was empty which signifies all records contained the proccessed flag as TRUE; the Lambda will not continue to proccess an empty array of records',
             { debugInfo: error }
           );
