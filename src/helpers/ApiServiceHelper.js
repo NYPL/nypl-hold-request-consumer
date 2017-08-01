@@ -2,7 +2,6 @@
 const async = require('async');
 const axios = require('axios');
 const qs = require('qs');
-const NyplStreamsClient = require('@nypl/nypl-streams-client');
 const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const ResultStreamHelper = require('../helpers/ResultStreamHelper')
 const logger = require('../helpers/Logger');
@@ -37,6 +36,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       const loggerMessage = (records.length > 1) ? `${records.length} records` : `${records.length} record`;
       logger.info(`starting async iteration over ${loggerMessage} to fetch Item data`);
       async.mapSeries(records, (item, callback) => {
+        // records[0].record = 'blah';
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
@@ -49,42 +49,107 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             return callback(null, item);
           })
           .catch(error => {
-            // POST FAILURE TO STREAM
             logger.error(
-              `unable to retrieve Item data for hold request record (${item.id}), posting failed record to HoldRequestResult stream`,
-              { holdRequestId: item.id, record: item, error: error.response || error }
+              `unable to retrieve Item data for hold request record (${item.id}); will post to HoldRequestResult stream only for status codes 400/404`,
+              { holdRequestId: item.id, record: item }
             );
+            let errorMessage = `an error was received from the Item Service for HoldRequestId: ${item.id}`;
 
-            return ResultStreamHelper.postRecordToStream({
-              holdRequestId: item.id,
-              jobId: item.jobId,
-              errorType: 'hold-request-record-missing-item-data',
-              errorMessage: `unable to retrieve Item data from Item Service for hold request record (${item.id})`
-            })
-            .then(res => {
-              logger.info(
-                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
-                { holdRequestId: item.id }
+            if (error.response) {
+              const statusCode = error.response.status;
+              const statusText = error.response.statusText.toLowerCase() || '';
+              errorMessage += `; ${statusText}`;
+
+              switch (statusCode) {
+                case 400:
+                case 404:
+                  // POST FAILURE TO STREAM
+                  logger.error(
+                    `posting hold request record (${item.id}) to HoldRequestResult stream; non-recoverable status code (${statusCode}); ${statusText}`,
+                    { holdRequestId: item.id, record: item, error: error.response }
+                  );
+                  return ResultStreamHelper.postRecordToStream({
+                    holdRequestId: item.id,
+                    jobId: item.jobId,
+                    errorType: 'hold-request-record-missing-item-data',
+                    errorMessage: `unable to retrieve Item data from Item Service for hold request record (${item.id})`
+                  })
+                  .then(res => {
+                    logger.info(
+                      `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
+                      { holdRequestId: item.id }
+                    );
+                    return callback(null);
+                  })
+                  .catch(err => {
+                    logger.error(
+                      `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                      { holdRequestId: item.id, error: err }
+                    );
+
+                    // At this point, we could not POST the failed hold request to the results stream.
+                    // We are exiting the promise chain and restarting the kinesis handler
+                    return callback(HoldRequestConsumerError({
+                      message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                      type: 'hold-request-result-stream-error',
+                      status: err.response && err.response.status ? err.response.status : null,
+                      function: 'postRecordToStream',
+                      error: err
+                    }));
+                  });
+                case 401:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'access-token-invalid',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+                case 403:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'access-forbidden-for-scopes',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+                default:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'item-service-error',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+              }
+            }
+
+            if (error.request) {
+              return callback(
+                HoldRequestConsumerError({
+                  message: errorMessage,
+                  type: 'item-service-error',
+                  function: functionName,
+                  error: error.request
+                })
               );
+            }
 
-              ResultStreamHelper.handleErrorCodesFallback(error, item.id, 'Item Service', callback);
-            })
-            .catch(err => {
-              logger.error(
-                `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                { holdRequestId: item.id, error: err }
-              );
-
-              // At this point, we could not POST the failed hold request to the results stream.
-              // We are exiting the promise chain and restarting the kinesis handler
-              return callback(HoldRequestConsumerError({
-                message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                type: 'hold-request-result-stream-error',
-                status: err.response && err.response.status ? err.response.status : null,
-                function: 'postRecordToStream',
-                error: err
-              }));
-            });
+            // Something happened in setting up the request that triggered an Error
+            return callback(
+              HoldRequestConsumerError({
+                message: error.message,
+                type: 'item-service-error',
+                function: functionName,
+                error: error.message
+              })
+            );
           });
         }
 
@@ -152,41 +217,107 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             return callback(null, item);
           })
           .catch((error) => {
-            // POST failure to HoldRequestResult Stream
             logger.error(
-              `unable to retrieve Patron data for hold request record (${item.id}), posting failed record to HoldRequestResult stream`,
-              { holdRequestId: item.id, record: item, error: error.response || error }
+              `unable to retrieve Patron data for hold request record (${item.id}); will post to HoldRequestResult stream only for status codes 400/404`,
+              { holdRequestId: item.id, record: item }
             );
-            return ResultStreamHelper.postRecordToStream({
-              holdRequestId: item.id,
-              jobId: item.jobId,
-              errorType: 'hold-request-record-missing-patron-data',
-              errorMessage: `unable to retrieve Patron data from Patron Service for hold request record (${item.id})`
-            })
-            .then(res => {
-              logger.error(
-                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
-                { holdRequestId: item.id }
-              );
+            let errorMessage = `an error was received from the Patron Service for HoldRequestId: ${item.id}`;
 
-              ResultStreamHelper.handleErrorCodesFallback(error, item.id, 'Patron Service', callback);
-            })
-            .catch(err => {
-              logger.error(
-                `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                { holdRequestId: item.id, error: err }
-              );
+            if (error.response) {
+              const statusCode = error.response.status;
+              const statusText = error.response.statusText.toLowerCase() || '';
+              errorMessage += `; ${statusText}`;
 
-              // At this point, we could not POST the failed hold request to the results stream.
-              // We are exiting the promise chain and restarting the kinesis handler
-              return callback(HoldRequestConsumerError({
-                message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                type: 'hold-request-result-stream-error',
-                status: err.response && err.response.status ? err.response.status : null,
-                function: 'postRecordToStream',
-                error: err
-              }));
-            });
+              switch (statusCode) {
+                case 400:
+                case 404:
+                  // POST FAILURE TO STREAM
+                  logger.error(
+                    `posting hold request record (${item.id}) to HoldRequestResult stream; non-recoverable status code (${statusCode}); ${statusText}`,
+                    { holdRequestId: item.id, record: item, error: error.response }
+                  );
+                  return ResultStreamHelper.postRecordToStream({
+                    holdRequestId: item.id,
+                    jobId: item.jobId,
+                    errorType: 'hold-request-record-missing-patron-data',
+                    errorMessage: `unable to retrieve Patron data from Patron Service for hold request record (${item.id})`
+                  })
+                  .then(res => {
+                    logger.info(
+                      `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
+                      { holdRequestId: item.id }
+                    );
+                    return callback(null);
+                  })
+                  .catch(err => {
+                    logger.error(
+                      `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                      { holdRequestId: item.id, error: err }
+                    );
+
+                    // At this point, we could not POST the failed hold request to the results stream.
+                    // We are exiting the promise chain and restarting the kinesis handler
+                    return callback(HoldRequestConsumerError({
+                      message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                      type: 'hold-request-result-stream-error',
+                      status: err.response && err.response.status ? err.response.status : null,
+                      function: 'postRecordToStream',
+                      error: err
+                    }));
+                  });
+                case 401:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'access-token-invalid',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+                case 403:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'access-forbidden-for-scopes',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+                default:
+                  return callback(
+                    HoldRequestConsumerError({
+                      message: errorMessage,
+                      type: 'patron-service-error',
+                      status: statusCode,
+                      function: functionName,
+                      error: error.response
+                    })
+                  );
+              }
+            }
+
+            if (error.request) {
+              return callback(
+                HoldRequestConsumerError({
+                  message: errorMessage,
+                  type: 'patron-service-error',
+                  function: functionName,
+                  error: error.request
+                })
+              );
+            }
+
+            // Something happened in setting up the request that triggered an Error
+            return callback(
+              HoldRequestConsumerError({
+                message: error.message,
+                type: 'patron-service-error',
+                function: functionName,
+                error: error.message
+              })
+            );
           });
         }
 
