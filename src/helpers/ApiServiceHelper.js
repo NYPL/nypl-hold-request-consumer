@@ -292,9 +292,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (!records.length) {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the hold requests records array is empty',
+          message: 'the hold requests records array is empty, this may occur if records were filtered out once posted to HoldRequestResult stream; cannot process async HTTP requests for an empty array',
           type: 'empty-function-parameter',
-          function: functionName
+          function: functionName,
+          error: {
+            records: records
+          }
         })
       );
     }
