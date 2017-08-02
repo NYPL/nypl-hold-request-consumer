@@ -187,7 +187,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         // Recoverable Error: The Item Service might be down, will attempt to restart handler.
         if (error.errorType === 'item-service-error' && error.errorStatus >= 500) {
           logger.error(
-            'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx/null status code',
+            'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
             { debugInfo: error }
           );
 
