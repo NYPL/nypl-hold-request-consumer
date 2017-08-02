@@ -55,9 +55,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           })
           .then(res => {
             logger.info(
-              `successfully posted failed hold request record (${record.id}) to HoldRequestResult stream`,
+              `successfully posted failed hold request record (${record.id}) to HoldRequestResult stream; removed failed record (${record.id}) from remaining records to be processed`,
               { holdRequestId: record.id }
             );
+
             return cb(null);
           })
           .catch(err => {
@@ -138,7 +139,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       const loggerMessage = (records.length > 1) ? `${records.length} records` : `${records.length} record`;
       logger.info(`starting async iteration over ${loggerMessage} to fetch Item data`);
       async.mapSeries(records, (item, callback) => {
-        // records[0].record = 'blah';
+        records[0].record = 'blah';
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
