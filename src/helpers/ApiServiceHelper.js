@@ -28,8 +28,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     };
   };
 
-  this.handleErrorsByResponseCode = (error, record, serviceName, cb) => {
-    const functionName = 'handleErrorsByResponseCode';
+  this.handleErrorsByStatusCode = (error, record, serviceName, cb) => {
+    const functionName = 'handleErrorsByStatusCode';
     const errorType = serviceName.replace(/\s+/g, '-').toLowerCase() + '-error';
     let errorMessage = `an error was received from the ${serviceName} for HoldRequestId: ${record.id}`;
 
@@ -156,7 +156,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this.handleErrorsByResponseCode(error, item, 'Item Service', callback);
+            return this.handleErrorsByStatusCode(error, item, 'Item Service', callback);
           });
         }
 
@@ -228,7 +228,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this.handleErrorsByResponseCode(error, item, 'Patron Service', callback);
+            return this.handleErrorsByStatusCode(error, item, 'Patron Service', callback);
           });
         }
 
