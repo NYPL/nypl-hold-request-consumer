@@ -36,6 +36,19 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (error.response) {
       const statusCode = error.response.status;
       const statusText = error.response.statusText.toLowerCase() || '';
+      let errorTypeByService = '';
+      let errorMessageByService = '';
+
+      if (serviceName === 'Patron Service') {
+        errorTypeByService = 'hold-request-record-missing-patron-data';
+        errorMessageByService = `unable to retrieve Patron data from Patron Service for hold request record (${record.id})`;
+      }
+
+      if (serviceName === 'Item Service') {
+        errorTypeByService = 'hold-request-record-missing-item-data';
+        errorMessageByService = `unable to retrieve Item data from Item Service for hold request record (${record.id})`;
+      }
+
       errorMessage += `; ${statusText}`;
 
       switch (statusCode) {
@@ -50,8 +63,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           return ResultStreamHelper.postRecordToStream({
             holdRequestId: record.id,
             jobId: record.jobId,
-            errorType: 'hold-request-record-missing-item-data',
-            errorMessage: `unable to retrieve Item data from Item Service for hold request record (${record.id})`
+            errorType: errorTypeByService,
+            errorMessage: errorMessageByService
           })
           .then(res => {
             logger.info(
@@ -139,7 +152,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       const loggerMessage = (records.length > 1) ? `${records.length} records` : `${records.length} record`;
       logger.info(`starting async iteration over ${loggerMessage} to fetch Item data`);
       async.mapSeries(records, (item, callback) => {
-        records[0].record = 'blah';
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
