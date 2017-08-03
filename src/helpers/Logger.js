@@ -16,6 +16,29 @@ const nyplLogLevels = {
   }
 };
 
+const getLogLevelCode = (levelString) => {
+  switch (levelString) {
+    case 'emergency':
+      return 0;
+    case 'alert':
+      return 1;
+    case 'critical':
+      return 2;
+    case 'error':
+      return 3;
+    case 'warning':
+      return 4;
+    case 'notice':
+      return 5;
+    case 'info':
+      return 6;
+    case 'debug':
+      return 7;
+    default:
+      return 'n/a';
+  }
+};
+
 const logger = new winston.Logger({
   levels: nyplLogLevels.levels,
   transports: [
@@ -26,6 +49,7 @@ const logger = new winston.Logger({
       formatter: (options) => {
         const result = {
           timestamp: options.timestamp(),
+          levelCode: getLogLevelCode(options.level),
           level: options.level.toUpperCase()
         };
 
