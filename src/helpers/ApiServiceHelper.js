@@ -49,7 +49,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         errorMessageByService = `unable to retrieve Item data from Item Service for hold request record (${record.id})`;
       }
 
-      errorMessage += `; ${statusText}`;
+      errorMessage += `; status code (${statusCode}); ${statusText}`;
+
+      logger.error(
+        errorMessage,
+        { holdRequestId: record.id, record: record, error: error.response }
+      );
 
       switch (statusCode) {
         case 400:
@@ -124,6 +129,11 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (error.request) {
+      logger.error(
+        errorMessage,
+        { holdRequestId: record.id, record: record, error: error.request }
+      );
+
       return cb(
         HoldRequestConsumerError({
           message: errorMessage,
@@ -135,6 +145,11 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     // Something happened in setting up the request that triggered an Error
+    logger.error(
+      errorMessage,
+      { holdRequestId: record.id, record: record, error: error }
+    );
+
     return cb(
       HoldRequestConsumerError({
         message: error.message,
@@ -292,10 +307,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (!records.length) {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the hold requests records array is empty, this may occur if records were filtered out once posted to HoldRequestResult stream; cannot process async HTTP requests for an empty array',
+          message: 'the records array is empty, this may occur if records were filtered out once posted to the HoldRequestResult stream; cannot process async HTTP requests for empty records',
           type: 'empty-function-parameter',
           function: functionName,
           error: {
+            type: type,
+            apiUrl: apiUrl,
             records: records
           }
         })

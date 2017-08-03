@@ -13,7 +13,7 @@ const SCSBApiHelper = module.exports = {
     if (!records.length) {
       return Promise.reject(
         HoldRequestConsumerError({
-          message: 'the hold requests records array is empty, this may occur if records were filtered out once posted to HoldRequestResult stream; cannot process POST requests to SCSB API',
+          message: 'the records array is empty, this may occur if records were filtered out once posted to the HoldRequestResult stream; cannot process POST requests to the SCSB API for empty records',
           type: 'empty-records-array',
           function: functionName,
           error: {
