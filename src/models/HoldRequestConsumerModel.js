@@ -31,7 +31,13 @@ function HoldRequestConsumerModel () {
     }
 
     logger.info('filtering out decoded records with a processed flag equal to true; may result in an empty array.');
-    const filteredRecords = records.filter(record => record.processed === false);
+    const filteredRecords = records.filter(record => {
+      if (record.processed) {
+        logger.info(`filtered out hold request record (${record.id}); contains the proccessed flag set as true and has been removed from the records array for further processing`);
+      }
+
+      return !record.processed;
+    });
 
     logger.info(`total records decoded: ${records.length}; total records to process: ${filteredRecords.length}`);
     if (filteredRecords.length === 0) {

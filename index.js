@@ -121,7 +121,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(recordsWithItemData => {
-      logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
+      logger.info('storing updated records that may contain Item data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithItemData);
 
       return apiHelper.handleHttpAsyncRequests(
@@ -132,7 +132,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(recordsWithPatronData => {
-      logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
+      logger.info('storing updated records that may contain Patron data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithPatronData);
 
       return SCSBApiHelper.handlePostingRecordsToSCSBApi(
@@ -143,15 +143,16 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     })
     .then(resultsOfRecordswithScsbResponse => {
       const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
+
       logger.info(successMsg);
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
-      // console.log(hrcModel.getRecords(), resultsOfRecordswithScsbResponse);
+
       return callback(null, successMsg);
     })
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
-      logger.warning(
-        'A possible fatal error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
+      logger.notice(
+        'A error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
         { debugInfo: error }
       );
 
@@ -165,7 +166,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       if (error.name === 'HoldRequestConsumerError') {
         if (error.errorType === 'empty-filtered-records') {
-          logger.warning(
+          logger.notice(
             'the filtered hold request records array was empty which signifies all records contained the proccessed flag as TRUE; the Lambda will not continue to proccess an empty array of records',
             { debugInfo: error }
           );
@@ -217,16 +218,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         if (error.errorType === 'scsb-api-error' && error.errorStatus >= 500) {
           logger.error(
             'restarting the HoldRequestConsumer Lambda; the SCSB API Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error);
-        }
-
-        // Recoverable Error: A Service might be down, will attempt to restart handler.
-        if (error.errorType === 'service-error' && error.errorStatus >= 500) {
-          logger.error(
-            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
             { debugInfo: error }
           );
 
