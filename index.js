@@ -152,7 +152,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
       logger.notice(
-        'an error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
+        'a possible error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
         { debugInfo: error }
       );
 
