@@ -152,14 +152,14 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .catch(error => {
       // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
       logger.notice(
-        'A error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
+        'an error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
         { debugInfo: error }
       );
 
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
-          'A fatal/non-recoverable AvroValidationError occured which prohibits decoding the kinesis stream; Hold Request Consumer Lambda will NOT restart',
+          'a fatal/non-recoverable AvroValidationError occured which prohibits decoding the kinesis stream; Hold Request Consumer Lambda will NOT restart',
           { debugInfo: error.message }
         );
       }
@@ -270,7 +270,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
   } catch (error) {
     // Non-recoverable Error: Function arguments are missing from .env file -- cannot begin promise chain without them
     logger.error(
-      `Fatal Error: ${error.errorMessage}`,
+      `fatal error: ${error.errorMessage}`,
       { type: error.errorType, function: error.function, debugInfo: error }
     );
   }
