@@ -122,7 +122,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(recordsWithItemData => {
-      logger.info('storing updated records containing Item data to HoldRequestConsumerModel');
+      logger.info('storing updated records that may contain Item data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithItemData);
 
       return apiHelper.handleHttpAsyncRequests(
@@ -133,7 +133,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       );
     })
     .then(recordsWithPatronData => {
-      logger.info('storing updated records containing Patron data to HoldRequestConsumerModel');
+      logger.info('storing updated records that may contain Patron data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithPatronData);
 
       return SCSBApiHelper.handlePostingRecordsToSCSBApi(
@@ -145,7 +145,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .then(resultsOfRecordswithScsbResponse => {
       logger.info('successfully processed hold request records; no fatal errors occured');
       hrcModel.setRecords(resultsOfRecordswithScsbResponse);
-      // console.log(hrcModel.getRecords(), resultsOfRecordswithScsbResponse);
+
       return callback(null, 'successfully processed hold request records; no fatal errors occured');
     })
     .catch(error => {
@@ -208,16 +208,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         if (error.errorType === 'scsb-api-error' && error.errorStatus >= 500) {
           logger.error(
             'restarting the HoldRequestConsumer Lambda; the SCSB API Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error);
-        }
-
-        // Recoverable Error: A Service might be down, will attempt to restart handler.
-        if (error.errorType === 'service-error' && error.errorStatus >= 500) {
-          logger.error(
-            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
             { debugInfo: error }
           );
 

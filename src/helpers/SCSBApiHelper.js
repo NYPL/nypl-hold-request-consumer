@@ -10,6 +10,19 @@ const SCSBApiHelper = module.exports = {
   handlePostingRecordsToSCSBApi: (records, scsbApiBaseUrl, scsbApiKey) => {
     const functionName = 'handlePostingRecordsToSCSBApi';
 
+    if (!records.length) {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the records array is empty, this may occur if records were filtered out once posted to the HoldRequestResult stream; cannot process POST requests to the SCSB API for empty records',
+          type: 'empty-records-array',
+          function: functionName,
+          error: {
+            records: records
+          }
+        })
+      );
+    }
+
     if (!scsbApiBaseUrl) {
       return Promise.reject(
         HoldRequestConsumerError({
