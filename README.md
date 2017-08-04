@@ -2,6 +2,17 @@
 
 An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider.
 
+## Table of Contents
+- [Requirements](#requirements)
+- Getting Started
+  - [Installation](#installation)
+  - [Setup Configurations](#setup-configurations)
+  - [Developing Locally](#developing-locally)
+  - [Deploying your Lambda](#deploying-your-lambda)
+  - [Tests](#tests)
+  - [Linting](#linting)
+- [Dependencies](#npm-dependencies)
+
 ## Version
 > v0.0.1
 
@@ -112,6 +123,17 @@ $ npm run setup-qa-sources
 ```console
 $ npm run setup-prod-sources
 ```
+### Developing Locally
+To develop and run your Lambda locally you must ensure to complete `Step 1` and `Step 2` of the Setup process.
+
+***REMINDER:*** Your `./config/local.env` and `./.env` environment variables ***MUST*** be configured in order for the next step to work.
+
+Next, run the following NPM command to use the **sample** event found in `./sample/sample_event.json`.
+
+> Exceutes `node lambda run` pointing the the sample event.
+```console
+$ npm run local-run
+```
 
 ### Deploying your Lambda
 To deploy your Lambda function via the `node-lambda` module __**ensure**__ you have completed all the steps of the [Setup](#setup-configurations) process and have added all configuration variables required.
@@ -131,18 +153,6 @@ $ npm run deploy-qa
 * Runs `node-lambda deploy` with **PRODUCTION** configurations
 ```console
 $ npm run deploy-prod
-```
-
-### Developing Locally
-To develop and run your Lambda locally you must ensure to complete `Step 1` and `Step 2` of the Setup process.
-
-***REMINDER:*** Your `./config/local.env` and `./.env` environment variables ***MUST*** be configured in order for the next step to work.
-
-Next, run the following NPM command to use the **sample** event found in `./sample/sample_event.json`.
-
-> Exceutes `node lambda run` pointing the the sample event.
-```console
-$ npm run local-run
 ```
 
 ### Tests
@@ -180,7 +190,7 @@ $ npm run lint // Will lint all files except those listed in package.json under 
 $ npm run lint [filename].js // Will lint the specific JS file
 ```
 
-### NPM Dependencies
+## NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
 * [nypl-scsb-rest-client](https://www.npmjs.com/package/@nypl/scsb-rest-client)
 * [async](https://www.npmjs.com/package/async)
