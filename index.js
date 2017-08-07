@@ -258,7 +258,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           return false;
         }
       } else {
-        // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
+        // Log any other possible error
         logger.notice(
           'a possible error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
           { debugInfo: error }
