@@ -271,6 +271,8 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       `fatal error: ${error.errorMessage}`,
       { type: error.errorType, function: error.function, debugInfo: error }
     );
+
+    return error;
   }
 };
 
