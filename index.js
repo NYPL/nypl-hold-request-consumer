@@ -150,21 +150,13 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, successMsg);
     })
     .catch(error => {
-      // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
-      logger.notice(
-        'a possible error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
-        { debugInfo: error }
-      );
-
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
           'a fatal/non-recoverable AvroValidationError occured which prohibits decoding the kinesis stream; Hold Request Consumer Lambda will NOT restart',
           { debugInfo: error.message }
         );
-      }
-
-      if (error.name === 'HoldRequestConsumerError') {
+      } else if (error.name === 'HoldRequestConsumerError') {
         if (error.errorType === 'empty-filtered-records') {
           logger.notice(
             'the filtered hold request records array was empty which signifies all records contained the proccessed flag as TRUE; the Lambda will not continue to proccess an empty array of records',
@@ -265,6 +257,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
           return false;
         }
+      } else {
+        // Handling Errors From Promise Chain, these errors are may be fatal OR recoverable
+        logger.notice(
+          'a possible error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
+          { debugInfo: error }
+        );
       }
     });
   } catch (error) {
