@@ -18,7 +18,7 @@
     "setup-dev-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_dev.json",
     "setup-qa-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_qa.json",
     "setup-prod-sources": "cp ./sample/sample_event_sources.json ./config/event_sources_prod.json",
-    "test": "./node_modules/mocha/bin/mocha",
+    "test": "./node_modules/.bin/mocha test",
     "test-with-report": "NODE_ENV=test ./node_modules/.bin/nyc --reporter=lcov --reporter=text ./node_modules/mocha/bin/mocha"
   },
   "repository": {
@@ -48,11 +48,10 @@
     "winston": "2.3.1"
   },
   "devDependencies": {
-    "babel-plugin-istanbul": "4.1.4",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-latest": "6.24.1",
-    "babel-register": "6.24.1",
     "chai": "4.0.2",
+    "chai-as-promised": "7.1.1",
+    "dotenv": "4.0.0",
+    "lambda-tester": "3.0.2",
     "mocha": "3.4.2",
     "node-lambda": "0.10.0",
     "nyc": "11.0.2",
@@ -61,9 +60,6 @@
     "standard": "10.0.2"
   },
   "nyc": {
-    "require": [
-      "babel-register"
-    ],
     "sourceMap": false,
     "instrument": false
   },
