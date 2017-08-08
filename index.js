@@ -99,7 +99,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       opts.oAuthProviderScope
     );
 
-    Promise.all([
+    return Promise.all([
       apiHelper.setTokenFromOAuthService(),
       streamsClient.decodeData(CACHE.getSchemaName(), records.map(i => i.kinesis.data))
     ]).then(result => {
@@ -150,6 +150,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, successMsg);
     })
     .catch(error => {
+      console.log(error);
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
@@ -206,16 +207,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           return callback(error);
         }
 
-        // Recoverable Error: The SCSB Service might be down, will attempt to restart handler.
-        if (error.errorType === 'scsb-api-error' && error.errorStatus >= 500) {
-          logger.error(
-            'restarting the HoldRequestConsumer Lambda; the SCSB API Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error);
-        }
-
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
         if (error.errorType === 'empty-access-token-from-oauth-service') {
           logger.error(
@@ -237,6 +228,16 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           CACHE.setAccessToken(null);
 
           return callback(error);
+        }
+
+        // Non-Recoverable Error: Any SCSB API error should NOT execute a restart
+        if (error.errorType === 'scsb-api-error') {
+          logger.error(
+            'the HoldRequestConsumer Lambda will not restart; the SCSB API Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return false;
         }
 
         // Non-recoverable Error: The permissions scopes are invalid which originate from the .env file
@@ -271,27 +272,35 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       `fatal error: ${error.errorMessage}`,
       { type: error.errorType, function: error.function, debugInfo: error }
     );
+
+    return error;
   }
 };
 
 exports.handler = (event, context, callback) => {
-  const record = event.Records[0] || {};
-  // Handle Kinesis Stream
-  if (record.kinesis && record.kinesis.data) {
-    exports.kinesisHandler(
-      event.Records,
-      { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
-        resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
-        nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
-        scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
-        scsbApiKey: process.env.SCSB_API_KEY,
-        oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
-        oAuthClientId: process.env.OAUTH_CLIENT_ID,
-        oAuthClientSecret: process.env.OAUTH_CLIENT_SECRET,
-        oAuthProviderScope: process.env.OAUTH_PROVIDER_SCOPE
-      },
-      context,
-      callback
-    );
+  if (event && Array.isArray(event.Records) && event.Records.length > 0) {
+    const record = event.Records[0];
+    // Handle Kinesis Stream
+    if (record.kinesis && record.kinesis.data) {
+      return exports.kinesisHandler(
+        event.Records,
+        { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
+          resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+          nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
+          scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
+          scsbApiKey: process.env.SCSB_API_KEY,
+          oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
+          oAuthClientId: process.env.OAUTH_CLIENT_ID,
+          oAuthClientSecret: process.env.OAUTH_CLIENT_SECRET,
+          oAuthProviderScope: process.env.OAUTH_PROVIDER_SCOPE
+        },
+        context,
+        callback
+      );
+    }
+
+    return callback('the event.Records array does not contain a kinesis stream of records to process');
   }
+
+  return callback('the event.Records array is undefined');
 };

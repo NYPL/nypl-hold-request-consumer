@@ -377,7 +377,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         if (response && response.data && response.data.access_token) {
           logger.info('successfully obtained a new access_token from OAuth Service, saved access_token to CACHE');
           CACHE.setAccessToken(response.data.access_token);
-          return 'new-access-token-set';
+          return Promise.resolve('new-access-token-set');
         }
 
         // We obtained a valid response. However, we could not get a value from access_token
@@ -425,7 +425,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           status: 500,
           function: functionName
         }));
-      })
+      });
     }
 
     return Promise.resolve('access-token-exists-in-cache');
