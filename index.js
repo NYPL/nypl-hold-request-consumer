@@ -207,16 +207,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           return callback(error);
         }
 
-        // Recoverable Error: The SCSB Service might be down, will attempt to restart handler.
-        if (error.errorType === 'scsb-api-error' && error.errorStatus >= 500) {
-          logger.error(
-            'restarting the HoldRequestConsumer Lambda; the SCSB API Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error);
-        }
-
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
         if (error.errorType === 'empty-access-token-from-oauth-service') {
           logger.error(
@@ -238,6 +228,16 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           CACHE.setAccessToken(null);
 
           return callback(error);
+        }
+
+        // Non-Recoverable Error: Any SCSB API error should NOT execute a restart
+        if (error.errorType === 'scsb-api-error') {
+          logger.error(
+            'the HoldRequestConsumer Lambda will not restart; the SCSB API Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return false;
         }
 
         // Non-recoverable Error: The permissions scopes are invalid which originate from the .env file
