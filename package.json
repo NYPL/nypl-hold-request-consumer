@@ -39,11 +39,13 @@
   },
   "homepage": "https://github.com/NYPL/nypl-hold-request-consumer#readme",
   "dependencies": {
-    "@nypl/nypl-streams-client": "0.1.4",
     "@nypl/nypl-core-objects": "1.1.2",
+    "@nypl/nypl-streams-client": "0.1.4",
     "@nypl/scsb-rest-client": "1.0.2",
     "async": "2.5.0",
+    "aws-sdk": "2.97.0",
     "axios": "0.16.2",
+    "lambda-env-vars": "0.4.0",
     "qs": "6.4.0",
     "winston": "2.3.1"
   },
