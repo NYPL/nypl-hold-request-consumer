@@ -1,11 +1,13 @@
 /* eslint-disable semi */
 const NyplStreamsClient = require('@nypl/nypl-streams-client');
+const LambdaEnvVars= require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
+const lambdaEnvVarsClient = new LambdaEnvVars.default();
 
 exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
@@ -278,25 +280,67 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 };
 
 exports.handler = (event, context, callback) => {
+  const isProductionEnv = process.env.NODE_ENV === 'production';
+
   if (event && Array.isArray(event.Records) && event.Records.length > 0) {
     const record = event.Records[0];
     // Handle Kinesis Stream
     if (record.kinesis && record.kinesis.data) {
-      return exports.kinesisHandler(
-        event.Records,
-        { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
-          resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
-          nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
-          scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
-          scsbApiKey: process.env.SCSB_API_KEY,
-          oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
-          oAuthClientId: process.env.OAUTH_CLIENT_ID,
-          oAuthClientSecret: process.env.OAUTH_CLIENT_SECRET,
-          oAuthProviderScope: process.env.OAUTH_PROVIDER_SCOPE
-        },
-        context,
-        callback
-      );
+      // Execute the handler in local development mode, without decryption
+      if (!isProductionEnv) {
+        logger.info('executing kinesisHandler in local development mode');
+
+        return exports.kinesisHandler(
+          event.Records,
+          { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
+            resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+            nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
+            scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
+            scsbApiKey: process.env.SCSB_API_KEY,
+            oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
+            oAuthClientId: process.env.OAUTH_CLIENT_ID,
+            oAuthClientSecret: process.env.OAUTH_CLIENT_SECRET,
+            oAuthProviderScope: process.env.OAUTH_PROVIDER_SCOPE
+          },
+          context,
+          callback
+        );
+      }
+
+      // Production decryption executed
+      return lambdaEnvVarsClient.getCustomDecryptedValueList(
+        [
+          'OAUTH_CLIENT_ID',
+          'OAUTH_CLIENT_SECRET',
+          'OAUTH_PROVIDER_SCOPE',
+          'SCSB_API_KEY'
+        ],
+        { location: 'lambdaConfig' })
+        .then(resultObject => {
+          return exports.kinesisHandler(
+            event.Records,
+            { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
+              resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+              nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
+              scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
+              scsbApiKey: resultObject.SCSB_API_KEY,
+              oAuthProviderUrl: process.env.OAUTH_PROVIDER_URL,
+              oAuthClientId: resultObject.OAUTH_CLIENT_ID,
+              oAuthClientSecret: resultObject.OAUTH_CLIENT_SECRET,
+              oAuthProviderScope: resultObject.OAUTH_PROVIDER_SCOPE
+            },
+            context,
+            callback
+          );
+        })
+        .catch(error => {
+          logger.error(
+            'an error occured while decrypting the Lambda ENV variables via lambdaEnvVarsClient',
+            { debugInfo: error }
+          );
+
+          return callback(error);
+        });
     }
 
     return callback('the event.Records array does not contain a kinesis stream of records to process');
