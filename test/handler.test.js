@@ -1,6 +1,6 @@
 /* eslint-disable semi */
-// require('dotenv').config({ path: './config/test.env' });
-// const LambdaTester = require('lambda-tester');
+require('dotenv').config({ path: './config/test.env' });
+const LambdaTester = require('lambda-tester');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const sinon = require('sinon');
@@ -319,16 +319,16 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
     });
 
 
-    // it('should successfully processes records if all configuration parameters are defined', () => {
-    //   return LambdaTester(HoldRequestConsumer.handler)
-    //     .event(event)
-    //     .expectResult();
-    // });
-    //
-    // it('should fail if the event is not defined with correct configuration parameters', () => {
-    //   return LambdaTester( HoldRequestConsumer.handler )
-    //     .event({ Records: [] })
-    //     .expectError();
-  	// });
+    it('should successfully processes records if all configuration parameters are defined', () => {
+      return LambdaTester(HoldRequestConsumer.handler)
+        .event(event)
+        .expectResult();
+    });
+
+    it('should fail if the event is not defined with correct configuration parameters', () => {
+      return LambdaTester( HoldRequestConsumer.handler )
+        .event({ Records: [] })
+        .expectError();
+  	});
   });
 });
