@@ -1,4 +1,5 @@
 # NYPL Hold Request Consumer Lambda
+[![Coverage Status](https://coveralls.io/repos/github/NYPL/nypl-hold-request-consumer/badge.svg?branch=master)](https://coveralls.io/github/NYPL/nypl-hold-request-consumer?branch=master)
 
 An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider.
 
