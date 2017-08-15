@@ -93,13 +93,14 @@ An example of the sample deployment environment `.env` file:
 ```console
 NYPL_DATA_API_URL=XXX
 OAUTH_PROVIDER_URL=XXX
-OAUTH_PROVIDER_SCOPE=XXX
-OAUTH_CLIENT_ID=XXX
-OAUTH_CLIENT_SECRET=XXX
+OAUTH_PROVIDER_SCOPE=XXX // Encrypted in AWS
+OAUTH_CLIENT_ID=XXX // Encrypted in AWS
+OAUTH_CLIENT_SECRET=XXX // Encrypted in AWS
 HOLD_REQUEST_SCHEMA_NAME=XXX
 HOLD_REQUEST_RESULT_STREAM_NAME=XXX
 SCSB_API_BASE_URL=XXX
-SCSB_API_KEY=XXX
+SCSB_API_KEY=XXX // Encrypted in AWS
+NODE_ENV=XXX // Use `development` when developing locally via `npm run local-run`. If deploying to AWS via `npm run deploy-ENV` use `production`, this will trigger the decryption client for encrypted ENV variables.
 ```
 
 #### Step 4: Setup your environment specific `event_sources_{environment}.json` file
@@ -193,8 +194,10 @@ $ npm run lint [filename].js // Will lint the specific JS file
 ## NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
 * [nypl-scsb-rest-client](https://www.npmjs.com/package/@nypl/scsb-rest-client)
+* [aws-sdk](https://www.npmjs.com/package/aws-sdk)
 * [async](https://www.npmjs.com/package/async)
 * [axios](https://www.npmjs.com/package/axios)
+* [lambda-env-vars](https://www.npmjs.com/package/lambda-env-vars)
 * [qs](https://www.npmjs.com/package/qs)
 * [winston](https://www.npmjs.com/package/winston)
 * [node-lambda](https://www.npmjs.com/package/node-lambda)
