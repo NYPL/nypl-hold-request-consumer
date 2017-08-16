@@ -52,17 +52,17 @@
   "devDependencies": {
     "babel-plugin-istanbul": "4.1.4",
     "babel-register": "6.24.1",
-    "chai": "4.0.2",
+    "chai": "4.1.1",
     "chai-as-promised": "7.1.1",
     "coveralls": "2.13.1",
     "dotenv": "4.0.0",
     "lambda-tester": "3.0.2",
-    "mocha": "3.4.2",
+    "mocha": "3.5.0",
     "node-lambda": "0.10.0",
     "nyc": "11.1.0",
-    "sinon": "2.3.4",
-    "sinon-chai": "2.11.0",
-    "standard": "10.0.2"
+    "sinon": "3.2.0",
+    "sinon-chai": "2.13.0",
+    "standard": "10.0.3"
   },
   "nyc": {
     "require": [
