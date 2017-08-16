@@ -39,10 +39,15 @@ const getLogLevelCode = (levelString) => {
   }
 };
 
-const logger = new winston.Logger({
-  levels: nyplLogLevels.levels,
-  transports: [
-    new (winston.transports.Console)({
+const loggerTransports = [];
+
+if (process.env.NODE_ENV !== 'test') {
+  loggerTransports.push(
+    new winston.transports.Console({
+      handleExceptions: true,
+      json: false,
+      stringify: true,
+      colorize: true,
       timestamp: () => {
         return new Date().toISOString();
       },
@@ -75,7 +80,12 @@ const logger = new winston.Logger({
         return JSON.stringify(result);
       }
     })
-  ],
+  );
+}
+
+const logger = new winston.Logger({
+  levels: nyplLogLevels.levels,
+  transports: loggerTransports,
   exitOnError: false
 });
 

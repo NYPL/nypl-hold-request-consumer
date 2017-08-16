@@ -319,11 +319,11 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
     });
 
 
-    it('should successfully processes records if all configuration parameters are defined', () => {
-      return LambdaTester(HoldRequestConsumer.handler)
-        .event(event)
-        .expectResult();
-    });
+    // it('should successfully processes records if all configuration parameters are defined', () => {
+    //   return LambdaTester(HoldRequestConsumer.handler)
+    //     .event(event)
+    //     .expectResult();
+    // });
 
     it('should fail if the event is not defined with correct configuration parameters', () => {
       return LambdaTester( HoldRequestConsumer.handler )
