@@ -1,13 +1,13 @@
 /* eslint-disable semi */
 const NyplStreamsClient = require('@nypl/nypl-streams-client');
-const LambdaEnvVars= require('lambda-env-vars');
+const LambdaEnvVars = require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
 const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
-const lambdaEnvVarsClient = new LambdaEnvVars.default();
+const LambdaEnvVarsClient = new LambdaEnvVars.default();
 
 exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
@@ -112,8 +112,13 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return hrcModel.filterProcessedRecords(result[1]);
     })
     .then(filteredRecordsToProcess => {
-      logger.info('storing decoded/filtered kinesis records to HoldRequestConsumerModel');
       hrcModel.setRecords(filteredRecordsToProcess);
+
+      if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
+        logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing');
+
+        return callback(null, 'the lambda has completed processing due filtered hold request records which contained the proccessed flag set to TRUE; no further processing will occur; no fatal errors have occured');
+      }
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),
@@ -126,6 +131,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       logger.info('storing updated records that may contain Item data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithItemData);
 
+      if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
+        logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Patron Service; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
+
+        return callback(null, 'the lambda has completed processing due to filtering failed hold request records; no further processing will occur; no fatal errors have occured');
+      }
+
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),
         'patron-barcode-service',
@@ -136,6 +147,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     .then(recordsWithPatronData => {
       logger.info('storing updated records that may contain Patron data to the HoldRequestConsumerModel; if a record was posted to the HoldRequestResult stream, it was filtered from the original records');
       hrcModel.setRecords(recordsWithPatronData);
+
+      if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
+        logger.notice('the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
+
+        return callback(null, 'the lambda has completed processing due to filtering failed hold request records; no further processing will occur; no fatal errors have occured');
+      }
 
       return SCSBApiHelper.handlePostingRecordsToSCSBApi(
         hrcModel.getRecords(),
@@ -152,27 +169,21 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, successMsg);
     })
     .catch(error => {
-      console.log(error);
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
           'a fatal/non-recoverable AvroValidationError occured which prohibits decoding the kinesis stream; Hold Request Consumer Lambda will NOT restart',
           { debugInfo: error.message }
         );
-      } else if (error.name === 'HoldRequestConsumerError') {
-        if (error.errorType === 'empty-filtered-records') {
-          logger.notice(
-            'the filtered hold request records array was empty which signifies all records contained the proccessed flag as TRUE; the Lambda will not continue to proccess an empty array of records',
-            { debugInfo: error }
-          );
 
-          return false;
-        }
+        return false;
+      }
 
+      if (error.name === 'HoldRequestConsumerError') {
         // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
         if (error.errorType === 'hold-request-result-stream-error') {
-          logger.error(
-            'restarting the HoldRequestConsumer Lambda; unable to POST data to the HoldRequestResult stream',
+          logger.notice(
+            'restarting the HoldRequestConsumer Lambda; received an error from the HoldRequestResult stream; unable to send POST requests to the HoldRequestResult stream',
             { debugInfo: error }
           );
 
@@ -181,7 +192,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
         if (error.errorType === 'oauth-service-error' && error.errorStatus >= 500) {
-          logger.error(
+          logger.notice(
             'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code',
             { debugInfo: error }
           );
@@ -191,7 +202,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: The Item Service might be down, will attempt to restart handler.
         if (error.errorType === 'item-service-error' && error.errorStatus >= 500) {
-          logger.error(
+          logger.notice(
             'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
             { debugInfo: error }
           );
@@ -201,7 +212,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
         if (error.errorType === 'patron-service-error' && error.errorStatus >= 500) {
-          logger.error(
+          logger.notice(
             'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
             { debugInfo: error }
           );
@@ -211,7 +222,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
         if (error.errorType === 'empty-access-token-from-oauth-service') {
-          logger.error(
+          logger.notice(
             'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 200 response but the access_token value is empty',
             { debugInfo: error }
           );
@@ -221,7 +232,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Recoverable Error: OAuth Token expired error
         if (error.errorType === 'access-token-invalid' && error.errorStatus === 401) {
-          logger.error(
+          logger.notice(
             'restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests',
             { debugInfo: error }
           );
@@ -234,7 +245,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Non-Recoverable Error: Any SCSB API error should NOT execute a restart
         if (error.errorType === 'scsb-api-error') {
-          logger.error(
+          logger.notice(
             'the HoldRequestConsumer Lambda will not restart; the SCSB API Service returned a 5xx status code',
             { debugInfo: error }
           );
@@ -244,7 +255,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
         // Non-recoverable Error: The permissions scopes are invalid which originate from the .env file
         if (error.errorType === 'access-forbidden-for-scopes' && error.errorStatus === 403) {
-          logger.error(
+          logger.notice(
             'the HoldRequestConsumer Lambda caught a FATAL error and will NOT restart; OAuth scopes are forbidden, cannot continue fulfilling NYPL Data API requests',
             { debugInfo: error }
           );
@@ -252,16 +263,24 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           return false;
         }
 
-        if (error.errorStatus !== 401) {
-          logger.error(
-            'the HoldRequestConsumer Lambda caught a FATAL error and will NOT restart; the reponse statusCode is NOT 401 OR 5XX (recoverable errors)',
+        if (error.errorStatus && error.errorStatus !== 401) {
+          logger.notice(
+            'the HoldRequestConsumer Lambda caught an error and will NOT restart; the reponse statusCode is NOT 401 OR 5XX (recoverable errors)',
             { debugInfo: error }
           );
 
           return false;
         }
+      }
+
+      if (typeof error === 'string' || error instanceof String) {
+        logger.error(
+          `a fatal error occured, the Hold Request Consumer Lambda will NOT restart; ${error}`,
+          { debugInfo: error }
+        );
+
+        return false;
       } else {
-        // Log any other possible error
         logger.notice(
           'a possible error occured, the Hold Request Consumer Lambda will handle retires only on recoverable errors based on the errorType and errorCode',
           { debugInfo: error }
@@ -308,7 +327,7 @@ exports.handler = (event, context, callback) => {
       }
 
       // Production decryption executed
-      return lambdaEnvVarsClient.getCustomDecryptedValueList(
+      return LambdaEnvVarsClient.getCustomDecryptedValueList(
         [
           'OAUTH_CLIENT_ID',
           'OAUTH_CLIENT_SECRET',
@@ -335,7 +354,7 @@ exports.handler = (event, context, callback) => {
         })
         .catch(error => {
           logger.error(
-            'an error occured while decrypting the Lambda ENV variables via lambdaEnvVarsClient',
+            'an error occured while decrypting the Lambda ENV variables via LambdaEnvVarsClient',
             { debugInfo: error }
           );
 
@@ -343,8 +362,8 @@ exports.handler = (event, context, callback) => {
         });
     }
 
-    return callback('the event.Records array does not contain a kinesis stream of records to process');
+    return callback(new Error('the event.Records array does not contain a kinesis stream of records to process'));
   }
 
-  return callback('the event.Records array is undefined');
+  return callback(new Error('the event.Records array is undefined'));
 };
