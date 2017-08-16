@@ -117,7 +117,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
         logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing');
 
-        return callback(null, 'the lambda has completed processing due filtered hold request records which contained the proccessed flag set to TRUE; no further processing will occur; no fatal errors have occured');
+        return Promise.reject(
+          HoldRequestConsumerError({
+            message: 'the lambda has completed processing due to filtered hold request records containing the proccessed flag set to TRUE resulting in an empty array; no further processing will occur; no fatal errors have occured',
+            type: 'filtered-records-resulted-in-empty-array'
+          })
+        );
       }
 
       return apiHelper.handleHttpAsyncRequests(
@@ -134,7 +139,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
         logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Patron Service; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
 
-        return callback(null, 'the lambda has completed processing due to filtering failed hold request records; no further processing will occur; no fatal errors have occured');
+        return Promise.reject(
+          HoldRequestConsumerError({
+            message: 'the lambda has completed processing due to filtered hold request records resulting in an empty array; no further processing will occur; no fatal errors have occured',
+            type: 'filtered-records-resulted-in-empty-array'
+          })
+        );
       }
 
       return apiHelper.handleHttpAsyncRequests(
@@ -151,7 +161,12 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       if (hrcModel.isRecordsListEmpty(hrcModel.getRecords())) {
         logger.notice('the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
 
-        return callback(null, 'the lambda has completed processing due to filtering failed hold request records; no further processing will occur; no fatal errors have occured');
+        return Promise.reject(
+          HoldRequestConsumerError({
+            message: 'the lambda has completed processing due to filtered hold request records resulting in an empty array; no further processing will occur; no fatal errors have occured',
+            type: 'filtered-records-resulted-in-empty-array'
+          })
+        );
       }
 
       return SCSBApiHelper.handlePostingRecordsToSCSBApi(
@@ -180,6 +195,11 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       }
 
       if (error.name === 'HoldRequestConsumerError') {
+        // Not a fatal error but exited promise-chain due to filtered records resulting in an empty array
+        if (error.errorType === 'filtered-records-resulted-in-empty-array') {
+          return callback(null, error.errorMessage);
+        }
+
         // Recoverable Error: The HoldRequestResult Stream returned an error, will attempt to restart handler.
         if (error.errorType === 'hold-request-result-stream-error') {
           logger.notice(
