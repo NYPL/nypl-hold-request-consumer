@@ -20,38 +20,41 @@ function HoldRequestConsumerModel () {
   this.filterProcessedRecords = (records) => {
     const functionName = 'filterProcessedRecords';
 
-    if (!records.length) {
-      return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'no records to filter; an empty array was passed.',
-            type: 'empty-function-parameter',
-            function: functionName
-          })
-      );
+    if (Array.isArray(records) && records.length > 0) {
+      logger.info('filtering out decoded records with a processed flag equal to true; may result in an empty array.');
+
+      const filteredRecords = records.filter(record => {
+        if (record.processed) {
+          logger.info(`filtered out hold request record (${record.id}); contains the proccessed flag set as true and has been removed from the records array for further processing`);
+        }
+
+        return !record.processed;
+      });
+
+      logger.info(`total records decoded: ${records.length}; total records to process: ${filteredRecords.length}`);
+
+      return Promise.resolve(filteredRecords);
     }
 
-    logger.info('filtering out decoded records with a processed flag equal to true; may result in an empty array.');
-    const filteredRecords = records.filter(record => {
-      if (record.processed) {
-        logger.info(`filtered out hold request record (${record.id}); contains the proccessed flag set as true and has been removed from the records array for further processing`);
-      }
+    return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'no records to filter; an empty array was passed.',
+          type: 'empty-function-parameter',
+          function: functionName
+        })
+    );
+  }
 
-      return !record.processed;
-    });
-
-    logger.info(`total records decoded: ${records.length}; total records to process: ${filteredRecords.length}`);
-    if (filteredRecords.length === 0) {
-      return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'the filtered records array is empty; all records contained the proccessed flag equal to true',
-            type: 'empty-filtered-records',
-            function: functionName,
-            error: records
-          })
-      );
+  this.isRecordsListEmpty = (records) => {
+    if (!Array.isArray(records)) {
+      return true;
     }
 
-    return Promise.resolve(filteredRecords);
+    if (records.length === 0) {
+      return true;
+    }
+
+    return false;
   }
 }
 

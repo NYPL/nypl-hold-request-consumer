@@ -31,7 +31,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   this.handleErrorsByStatusCode = (error, record, serviceName, cb) => {
     const functionName = 'handleErrorsByStatusCode';
     const errorType = serviceName.replace(/\s+/g, '-').toLowerCase() + '-error';
-    let errorMessage = `an error was received from the ${serviceName} for HoldRequestId: ${record.id}`;
+    let errorMessage = `an error was received from the ${serviceName} for hold request record (${record.id})`;
 
     if (error.response) {
       const statusCode = error.response.status;
@@ -49,7 +49,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         errorMessageByService = `unable to retrieve Item data from Item Service for hold request record (${record.id})`;
       }
 
-      errorMessage += `; status code (${statusCode}); ${statusText}`;
+      errorMessage += `; service responded with a status code: (${statusCode}) and status text: ${statusText}`;
 
       logger.error(
         errorMessage,
@@ -60,9 +60,9 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         case 400:
         case 404:
           // POST FAILURE TO STREAM
-          logger.error(
+          logger.info(
             `posting hold request record (${record.id}) to HoldRequestResult stream; non-recoverable status code (${statusCode}); ${statusText}`,
-            { holdRequestId: record.id, record: record, error: error.response }
+            { holdRequestId: record.id }
           );
 
           return ResultStreamHelper.postRecordToStream({
@@ -179,7 +179,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             return callback(null, item);
           })
           .catch(error => {
-            logger.error(
+            logger.notice(
               `unable to retrieve Item data for hold request record (${item.id}); will post to HoldRequestResult stream only for status codes 400/404`,
               { holdRequestId: item.id, record: item }
             );
@@ -189,8 +189,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         }
 
         // Could not identify values for record id and nyplSource, post failure to stream
-        logger.error(
-          `unable to perform GET request to Item Service for hold request record (${item.id}); empty/undefined nyplSource and/or record key values`,
+        logger.notice(
+          `unable to perform GET request to Item Service for hold request record (${item.id}); empty/undefined nyplSource and/or record key values; posting failed hold request record (${item.id}) to HoldRequestResult stream`,
           { holdRequestId: item.id, record: item }
         );
 
@@ -201,7 +201,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           errorMessage: `unable to perform GET request to Item Service for hold request record (${item.id}); empty/undefined nyplSource and/or record key values`
         })
         .then(res => {
-          logger.error(
+          logger.info(
             `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
             { holdRequestId: item.id }
           );
@@ -251,7 +251,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
             return callback(null, item);
           })
           .catch((error) => {
-            logger.error(
+            logger.notice(
               `unable to retrieve Patron data for hold request record (${item.id}); will post to HoldRequestResult stream only for status codes 400/404`,
               { holdRequestId: item.id, record: item }
             );
@@ -261,8 +261,8 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         }
 
         // POST FAILURE TO STREAM for missing patron id value
-        logger.error(
-          `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value`,
+        logger.notice(
+          `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value; posting failed hold request record (${item.id}) to HoldRequestResult stream`,
           { holdRequestId: item.id, record: item }
         );
 
@@ -273,7 +273,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           errorMessage: `unable to perform GET request to Patron Service for hold request record (${item.id}); empty/undefined patron key value`
         })
         .then(res => {
-          logger.error(
+          logger.info(
             `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
             { holdRequestId: item.id }
           );
@@ -371,6 +371,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
     if (!cachedToken || cachedToken === '') {
       logger.info('fetching new access_token from OAuth Service; CACHED access_token is not defined');
+
       return axios
       .post(this.oauthUrl, qs.stringify(authConfig))
       .then((response) => {
@@ -381,7 +382,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         }
 
         // We obtained a valid response. However, we could not get a value from access_token
-        logger.error(`empty access_token value from OAuth Service response in function: ${functionName}`);
+        logger.error(`empty access_token value returned by OAuth Service in function: ${functionName}`);
         return Promise.reject(HoldRequestConsumerError({
           message: 'empty access_token value from OAuth Service',
           type: 'empty-access-token-from-oauth-service',
@@ -392,7 +393,11 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
         if (error.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          logger.error(`received a status outside of the 2xx range from OAuth Service in function: ${functionName}`);
+          logger.error(
+            `received a status outside of the 2xx range from OAuth Service in function: ${functionName}`,
+            { error: error.response }
+          );
+
           return Promise.reject(HoldRequestConsumerError({
             message: 'received a status outside of the 2xx range',
             type: 'oauth-service-error',
@@ -409,20 +414,23 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
         if (error.request) {
           // The request was made but no response was received
-          logger.error(`request was made, no response OAuth Service in function: ${functionName}`);
+          logger.error(
+            `an error occurred from the OAuth Service; request was made, no response OAuth Service when attempting to fetch an access_token in function: ${functionName}`,
+            { error: error.request }
+          );
+
           return Promise.reject(HoldRequestConsumerError({
-            message: 'request was made, no response from OAuth Service',
+            message: `an error occurred from the OAuth Service; request was made, no response OAuth Service when attempting to fetch an access_token in function: ${functionName}`,
             type: 'oauth-service-error',
             function: functionName,
             error: error.request
           }));
         }
 
-        logger.error(`an internal server error occurred from OAuth Service in function: ${functionName}`);
+        logger.error(`an error occurred from the OAuth Service; no response OR request properties were returned in function: ${functionName}`);
         return Promise.reject(HoldRequestConsumerError({
           message: 'An internal server error occurred',
           type: 'oauth-service-error',
-          status: 500,
           function: functionName
         }));
       });
