@@ -10,6 +10,19 @@ const SCSBApiHelper = module.exports = {
   handlePostingRecordsToSCSBApi: (records, scsbApiBaseUrl, scsbApiKey) => {
     const functionName = 'handlePostingRecordsToSCSBApi';
 
+    if (!records || !Array.isArray(records)) {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'an array is required for the records parameter; object, string, null or undefined types are forbidden',
+          type: 'undefined-records-array-parameter',
+          function: functionName,
+          error: {
+            records: records
+          }
+        })
+      );
+    }
+
     if (!records.length) {
       return Promise.reject(
         HoldRequestConsumerError({
@@ -192,9 +205,10 @@ const SCSBApiHelper = module.exports = {
       });
     });
   },
-  getSCSBDebugInfo: (response) => {
-    const debug = {};
-    if (response.success) {
+  getSCSBDebugInfo: (response = {}) => {
+    let debug = {};
+
+    if (response.hasOwnProperty('success')) {
       debug.success = response.success;
     }
 
