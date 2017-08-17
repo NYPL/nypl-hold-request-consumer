@@ -4,7 +4,7 @@ const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const CACHE = require('../globals/index');
 
 const ResultStreamHelper = module.exports = {
-  postRecordToStream: (obj = {}, streamName = CACHE.getResultStreamName()) => {
+  postRecordToStream: (obj = {}, streamName = CACHE.getResultStreamName(), schemaName = CACHE.getResultSchemaName()) => {
     const functionName = 'postRecordToStream';
     const objectToBePosted = {};
     const streamsClient = new NyplStreamsClient({
@@ -45,6 +45,6 @@ const ResultStreamHelper = module.exports = {
       objectToBePosted.error = null;
     }
 
-    return streamsClient.write(streamName, objectToBePosted);
+    return streamsClient.write(streamName, objectToBePosted, { avroSchemaName: schemaName });
   }
 };

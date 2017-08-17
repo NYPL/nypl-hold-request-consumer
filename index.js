@@ -29,6 +29,14 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       });
     }
 
+    if (!opts.resultSchemaName || opts.resultSchemaName === '') {
+      throw HoldRequestConsumerError({
+        message: 'missing resultSchemaName configuration parameter',
+        type: 'missing-kinesis-function-parameter',
+        function: functionName
+      });
+    }
+
     if (!opts.nyplDataApiBaseUrl || opts.nyplDataApiBaseUrl === '') {
       throw HoldRequestConsumerError({
         message: 'missing nyplDataApiBaseUrl configuration parameter',
@@ -88,6 +96,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     // Store configuration and ENV variables to global CACHE object
     CACHE.setSchemaName(opts.schemaName);
     CACHE.setResultStreamName(opts.resultStreamName);
+    CACHE.setResultSchemaName(opts.resultSchemaName);
     CACHE.setNyplDataApiBaseUrl(opts.nyplDataApiBaseUrl);
     CACHE.setSCSBApiBaseUrl(opts.scsbApiBaseUrl);
     CACHE.setSCSBApiKey(opts.scsbApiKey);
@@ -333,6 +342,7 @@ exports.handler = (event, context, callback) => {
           event.Records,
           { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
             resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+            resultSchemaName: process.env.HOLD_REQUEST_RESULT_SCHEMA_NAME,
             nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
             scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
             scsbApiKey: process.env.SCSB_API_KEY,
@@ -360,6 +370,7 @@ exports.handler = (event, context, callback) => {
             event.Records,
             { schemaName: process.env.HOLD_REQUEST_SCHEMA_NAME,
               resultStreamName: process.env.HOLD_REQUEST_RESULT_STREAM_NAME,
+              resultSchemaName: process.env.HOLD_REQUEST_RESULT_SCHEMA_NAME,
               nyplDataApiBaseUrl: process.env.NYPL_DATA_API_URL,
               scsbApiBaseUrl: process.env.SCSB_API_BASE_URL,
               scsbApiKey: resultObject.SCSB_API_KEY,

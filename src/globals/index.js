@@ -4,6 +4,7 @@ const CACHE = module.exports = {
   nypl_data_api_base_url: '',
   hold_req_schema_name: '',
   hold_req_result_stream_name: '',
+  hold_req_result_schema_name: '',
   scsb_api_base_url: '',
   scsb_api_key: '',
   getAccessToken: () => {
@@ -29,6 +30,12 @@ const CACHE = module.exports = {
   },
   setResultStreamName: (name) => {
     CACHE.hold_req_result_stream_name = name;
+  },
+  getResultSchemaName: () => {
+    return CACHE.hold_req_result_schema_name;
+  },
+  setResultSchemaName: (name) => {
+    CACHE.hold_req_result_schema_name = name;
   },
   getSCSBApiBaseUrl: () => {
     return CACHE.scsb_api_base_url;
