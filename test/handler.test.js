@@ -87,12 +87,40 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
       expect(result).to.have.property('errorMessage', 'missing resultStreamName configuration parameter');
     });
 
-    it('should return a HoldRequestConsumerError if no nyplDataApiBaseUrl configuration parameter is defined', () => {
+    it('should return a HoldRequestConsumerError if no resultSchemaName configuration parameter is defined', () => {
       const result = kinesisHandlerFunc(
         event.Records,
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName'
+        }
+      );
+
+      expect(result).to.have.property('errorType', 'missing-kinesis-function-parameter');
+      expect(result).to.have.property('errorMessage', 'missing resultSchemaName configuration parameter');
+    });
+
+    it('should return a HoldRequestConsumerError if the resultSchemaName configuration parameter is an empty string', () => {
+      const result = kinesisHandlerFunc(
+        event.Records,
+        {
+          schemaName: 'schemaName',
+          resultStreamName: 'streamName',
+          resultSchemaName: ''
+        }
+      );
+
+      expect(result).to.have.property('errorType', 'missing-kinesis-function-parameter');
+      expect(result).to.have.property('errorMessage', 'missing resultSchemaName configuration parameter');
+    });
+
+    it('should return a HoldRequestConsumerError if no nyplDataApiBaseUrl configuration parameter is defined', () => {
+      const result = kinesisHandlerFunc(
+        event.Records,
+        {
+          schemaName: 'schemaName',
+          resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName'
         }
       );
 
@@ -106,6 +134,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: ''
         }
       );
@@ -120,6 +149,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org'
         }
       );
@@ -134,6 +164,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: ''
         }
@@ -149,6 +180,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org'
         }
@@ -164,6 +196,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: ''
@@ -180,6 +213,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey'
@@ -196,6 +230,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -213,6 +248,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -230,6 +266,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -248,6 +285,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -266,6 +304,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -285,6 +324,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
@@ -304,6 +344,7 @@ describe('HoldRequestConsumer Lambda: Handle Kinesis Stream Input', () => {
         {
           schemaName: 'schemaName',
           resultStreamName: 'streamName',
+          resultSchemaName: 'HoldRequestResultSchemaName',
           nyplDataApiBaseUrl: 'http://test.test.org',
           scsbApiBaseUrl: 'http://test.scsb.api.org',
           scsbApiKey: 'fakekey',
