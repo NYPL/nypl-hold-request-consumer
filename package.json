@@ -6,9 +6,9 @@
   "scripts": {
     "lint": "./node_modules/.bin/standard",
     "local-run": "./node_modules/.bin/node-lambda run -f ./config/local.env -j ./sample/sample_event.json",
-    "deploy-dev": "./node_modules/.bin/node-lambda deploy -e development -f ./config/dev.env -S config/event_sources_dev.json -b subnet-f4fe56af -g sg-1d544067",
-    "deploy-qa": "./node_modules/.bin/node-lambda deploy -e qa -f ./config/qa.env -S config/event_sources_qa.json -b subnet-f4fe56af -g sg-1d544067",
-    "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json -b subnet-f4fe56af -g sg-1d544067",
+    "deploy-dev": "./node_modules/.bin/node-lambda deploy -e development -f ./config/dev.env -S config/event_sources_dev.json",
+    "deploy-qa": "./node_modules/.bin/node-lambda deploy -e qa -f ./config/qa.env -S config/event_sources_qa.json",
+    "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json",
     "package": "./node_modules/.bin/node-lambda package",
     "setup-node-lambda-env": "cp ./sample/.env.sample ./.env",
     "setup-local-env": "mkdir -p config && cp ./sample/deployment.env.sample ./config/local.env",
