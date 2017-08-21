@@ -1,5 +1,6 @@
 /* eslint-disable semi */
 const winston = require('winston');
+const SlackHook = require('winston-slack-hook');
 // Supress error handling
 winston.emitErrs = true;
 // Set default NYPL agreed upon log levels
@@ -83,7 +84,47 @@ if (process.env.NODE_ENV !== 'test') {
   );
 }
 
-const logger = new winston.Logger({
+if (process.env.NODE_ENV === 'production' && process.env.SLACK_WEBHOOK_URL !== ''
+  && process.env.SLACK_CHANNEL !== '' && process.env.SLACK_USERNAME !== '') {
+
+  loggerTransports.push(
+    new (SlackHook)({
+      level: 'error',
+      hookUrl: process.env.SLACK_WEBHOOK_URL,
+      username: process.env.SLACK_USERNAME,
+      channel: process.env.SLACK_CHANNEL,
+      appendMeta: false,
+      prependLevel: false,
+      formatter: (options) => {
+        let slackText = '>>> *Timestamp*: ' + new Date().toISOString() + '\n';
+
+        if (options.level) {
+          slackText += '*Level*: ' + options.level.toUpperCase() + '\n';
+          slackText += '*Level Code*: ' + getLogLevelCode(options.level) + '\n';
+        }
+
+        if (options.message) {
+          slackText += '*Message*:\n' + options.message + '\n';
+        }
+
+        if (options.meta && Object.keys(options.meta).length) {
+          if (options.meta.holdRequestId) {
+            slackText += '*Hold Request Id*: ' + options.meta.holdRequestId + '\n';
+            delete options.meta.holdRequestId;
+          }
+
+          if (options.meta && Object.keys(options.meta).length) {
+            slackText += '*Meta*:\n' + '```' + JSON.stringify(options.meta, null, '\t') + '```' + '\n';
+          }
+        }
+
+        return slackText;
+      }
+    })
+  );
+}
+
+const logger = new (winston.Logger)({
   levels: nyplLogLevels.levels,
   transports: loggerTransports,
   exitOnError: false
