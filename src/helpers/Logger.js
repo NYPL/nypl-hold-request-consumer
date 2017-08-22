@@ -1,6 +1,7 @@
 /* eslint-disable semi */
 const winston = require('winston');
 const SlackHook = require('winston-slack-hook');
+const CircularJSON = require('circular-json');
 // Supress error handling
 winston.emitErrs = true;
 // Set default NYPL agreed upon log levels
@@ -45,10 +46,6 @@ const loggerTransports = [];
 if (process.env.NODE_ENV !== 'test') {
   loggerTransports.push(
     new winston.transports.Console({
-      handleExceptions: true,
-      json: false,
-      stringify: true,
-      colorize: true,
       timestamp: () => {
         return new Date().toISOString();
       },
@@ -74,17 +71,17 @@ if (process.env.NODE_ENV !== 'test') {
           }
 
           if (options.meta && Object.keys(options.meta).length) {
-            result.meta = JSON.stringify(options.meta);
+            result.meta = CircularJSON.stringify(options.meta);
           }
         }
 
-        return JSON.stringify(result);
+        return CircularJSON.stringify(result);
       }
     })
   );
 }
 
-if (process.env.NODE_ENV === 'production' && process.env.SLACK_WEBHOOK_URL !== ''
+if (process.env.NODE_ENV === 'development' && process.env.SLACK_WEBHOOK_URL !== ''
   && process.env.SLACK_CHANNEL !== '' && process.env.SLACK_USERNAME !== '') {
 
   loggerTransports.push(
@@ -114,7 +111,7 @@ if (process.env.NODE_ENV === 'production' && process.env.SLACK_WEBHOOK_URL !== '
           }
 
           if (options.meta && Object.keys(options.meta).length) {
-            slackText += '*Meta*:\n' + '```' + JSON.stringify(options.meta, null, '\t') + '```' + '\n';
+            slackText += '*Meta*:\n' + '```' + CircularJSON.stringify(options.meta, null, '\t') + '```' + '\n';
           }
         }
 
