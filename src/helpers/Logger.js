@@ -81,7 +81,7 @@ if (process.env.NODE_ENV !== 'test') {
   );
 }
 
-if (process.env.NODE_ENV === 'development' && process.env.SLACK_WEBHOOK_URL !== ''
+if (process.env.NODE_ENV === 'production' && process.env.SLACK_WEBHOOK_URL !== ''
   && process.env.SLACK_CHANNEL !== '' && process.env.SLACK_USERNAME !== '') {
 
   loggerTransports.push(
