@@ -56,6 +56,24 @@ function HoldRequestConsumerModel () {
 
     return false;
   }
+
+  this.validateRemainingRecordsToProcess = (records, logMessage) => {
+    const functionName = 'validateRemainingRecordsToProcess';
+
+    if (this.isRecordsListEmpty(records)) {
+      logger.notice(logMessage);
+
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: logMessage,
+          type: 'filtered-records-resulted-in-empty-array',
+          function: functionName
+        })
+      );
+    }
+
+    return Promise.resolve(records);
+  }
 }
 
 module.exports = HoldRequestConsumerModel;

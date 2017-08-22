@@ -120,20 +120,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       return hrcModel.filterProcessedRecords(result[1]);
     })
-    .then(filteredRecordsToProcess => {
-      if (hrcModel.isRecordsListEmpty(filteredRecordsToProcess)) {
-        logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing');
-
-        return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing; no fatal errors have occured',
-            type: 'filtered-records-resulted-in-empty-array'
-          })
-        );
-      }
-
-      return Promise.resolve(filteredRecordsToProcess);
-    })
+    .then(filteredRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
+      filteredRecordsToProcess,
+      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing; no fatal errors have occured'
+    ))
     .then(remainingFilteredRecordsToProcess => {
       hrcModel.setRecords(remainingFilteredRecordsToProcess);
 
@@ -144,20 +134,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         CACHE.getAccessToken()
       );
     })
-    .then(recordsWithItemData => {
-      if (hrcModel.isRecordsListEmpty(recordsWithItemData)) {
-        logger.notice('the hold request records array is empty and the lambda will not execute http GET requests to the Patron Service; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
-
-        return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http GET requests to the Patron Service; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured',
-            type: 'filtered-records-resulted-in-empty-array'
-          })
-        );
-      }
-
-      return Promise.resolve(recordsWithItemData);
-    })
+    .then(recordsWithItemData => hrcModel.validateRemainingRecordsToProcess(
+      recordsWithItemData,
+      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http GET requests to the Patron Service; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
+    ))
     .then(recordsToProcessWithItemData => {
       hrcModel.setRecords(recordsToProcessWithItemData);
 
@@ -168,20 +148,10 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         CACHE.getAccessToken()
       );
     })
-    .then(recordsWithPatronData => {
-      if (hrcModel.isRecordsListEmpty(recordsWithPatronData)) {
-        logger.notice('the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream');
-
-        return Promise.reject(
-          HoldRequestConsumerError({
-            message: 'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured',
-            type: 'filtered-records-resulted-in-empty-array'
-          })
-        );
-      }
-
-      return Promise.resolve(recordsWithPatronData);
-    })
+    .then(recordsWithPatronData => hrcModel.validateRemainingRecordsToProcess(
+      recordsWithPatronData,
+      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
+    ))
     .then(recordsToProcessWithPatronData => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
 
@@ -282,7 +252,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         // Non-Recoverable Error: Any SCSB API error should NOT execute a restart
         if (error.errorType === 'scsb-api-error') {
           logger.notice(
-            'the HoldRequestConsumer Lambda will not restart; the SCSB API Service returned a 5xx status code',
+            'the HoldRequestConsumer Lambda will NOT restart; the SCSB API Service returned an error; SCSB API errors are considered non-retryable',
             { debugInfo: error }
           );
 
