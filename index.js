@@ -193,7 +193,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
@@ -203,7 +203,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Recoverable Error: The Item Service might be down, will attempt to restart handler.
@@ -213,7 +213,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
@@ -223,7 +223,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
@@ -233,7 +233,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Recoverable Error: OAuth Token expired error
@@ -246,7 +246,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
             { debugInfo: error }
           );
 
-          return callback(error);
+          return callback(error.errorMessage);
         }
 
         // Non-Recoverable Error: Any SCSB API error should NOT execute a restart

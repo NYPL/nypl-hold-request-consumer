@@ -53,7 +53,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
       logger.error(
         errorMessage,
-        { holdRequestId: record.id, record: record, error: error.response }
+        { holdRequestId: record.id, record: record, error: Object.assign({}, error.response.config, error.response.data || {}) }
       );
 
       switch (statusCode) {

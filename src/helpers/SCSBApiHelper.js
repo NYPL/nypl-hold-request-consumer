@@ -156,7 +156,7 @@ const SCSBApiHelper = module.exports = {
             // SCSB API ERROR
             logger.error(
               `unable to post hold request record (${item.id}) to SCSB API, received an error from SCSB API; posting record to HoldRequestResult stream`,
-              { holdRequestId: item.id, error: errorResponse, item: item }
+              { holdRequestId: item.id, record: item, error: errorResponse }
             );
 
             return ResultStreamHelper.postRecordToStream({
