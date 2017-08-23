@@ -53,7 +53,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
       logger.error(
         errorMessage,
-        { holdRequestId: record.id, record: record, error: Object.assign({}, error.response.config, error.response.data || {}) }
+        { holdRequestId: record.id,
+          record: record,
+          errorResponse: Object.assign({}, error.response.config || {}, error.response.data || {})
+        }
       );
 
       switch (statusCode) {
@@ -131,7 +134,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (error.request) {
       logger.error(
         errorMessage,
-        { holdRequestId: record.id, record: record, error: error.request }
+        { holdRequestId: record.id,
+          record: record,
+          errorRequest: error.request
+        }
       );
 
       return cb(
@@ -147,7 +153,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     // Something happened in setting up the request that triggered an Error
     logger.error(
       errorMessage,
-      { holdRequestId: record.id, record: record, error: error }
+      { holdRequestId: record.id,
+        record: record,
+        error: Object.assign({}, error.message || {}, error.config || {})
+      }
     );
 
     return cb(
