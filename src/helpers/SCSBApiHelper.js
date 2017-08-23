@@ -248,7 +248,7 @@ const SCSBApiHelper = module.exports = {
       return 'PUL';
     }
   },
-  generateSCSBModel: (object) => {
+  generateSCSBModel: (object = {}) => {
     const scsbModel = {
       requestingInstitution: 'NYPL' // default
     };
