@@ -1,4 +1,5 @@
 /* eslint-disable semi */
+require('dotenv').config({ path: '../../config/test.env' });
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper.js');
@@ -59,6 +60,55 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
     it('should reject with a HoldRequestConsumerError if the scsbApiKey parameter is an EMPTY String', () => {
       const result = handlePostingRecordsToSCSBApi([{ id: 'holdId' }], 'scsbApiBaseUrl', '');
       return result.should.be.rejected.and.eventually.have.property('errorMessage', 'the SCSB API key parameter is not defined; unable to instantiate SCSB Rest Client');
+    });
+
+    it('should validate all required parameters and execute a successful POST request to the SCSB API', () => {
+      const testRecords = [
+        {
+          id: 214,
+          jobId: 'be7a699a-f45e-4cf6-91d0-f080b90325be',
+          patron: '6779371',
+          nyplSource: 'sierra-nypl',
+          createdDate: '2017-07-12T11:39:42-04:00',
+          updatedDate: null,
+          success: false,
+          processed: false,
+          requestType: 'hold',
+          recordType: 'i',
+          record: '10011664',
+          pickupLocation: 'mal',
+          neededBy: '2018-01-07T02:32:51+00:00',
+          numberOfCopies: 1,
+          docDeliveryData: {},
+          item: {
+            nyplSource: 'sierra-nypl',
+            bibIds: [ '10026885' ],
+            id: '10011664',
+            nyplType: 'item',
+            updatedDate: '2017-08-07T20:33:50-04:00',
+            createdDate: '2009-02-03T00:51:38-05:00',
+            deletedDate: null,
+            deleted: false,
+            location: { code: 'rc2ma', name: 'OFFSITE - Request in Advance' },
+            status: { code: '-', display: 'AVAILABLE', duedate: null },
+            barcode: '33433000948251',
+            callNumber: '|hJXE 71-1',
+            itemType: null
+          },
+          patronInfo: {
+            barCode: '34871273465999',
+             name: 'MARLI, RECAPTEST',
+             base64PngBarCode: null,
+             temporary: false
+          }
+        }
+      ];
+      const result = handlePostingRecordsToSCSBApi(testRecords, process.env.SCSB_API_BASE_URL, process.env.SCSB_API_KEY);
+
+      return result.then(response => {
+        const item = response[0];
+        expect(item.scsbResponse).to.have.property('success', true);
+      });
     });
   });
 
