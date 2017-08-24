@@ -8,7 +8,7 @@
     "local-run": "./node_modules/.bin/node-lambda run -f ./config/local.env -j ./sample/sample_event.json",
     "deploy-dev": "./node_modules/.bin/node-lambda deploy -e development -f ./config/dev.env -S config/event_sources_dev.json",
     "deploy-qa": "./node_modules/.bin/node-lambda deploy -e qa -f ./config/qa.env -S config/event_sources_qa.json",
-    "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json",
+    "deploy-prod": "./node_modules/.bin/node-lambda deploy -e production -f ./config/prod.env -S config/event_sources_prod.json --role arn:aws:iam::946183545209:role/lambda-full-access --profile nypl-digital-dev",
     "package": "./node_modules/.bin/node-lambda package",
     "setup-node-lambda-env": "cp ./sample/.env.sample ./.env",
     "setup-local-env": "mkdir -p config && cp ./sample/deployment.env.sample ./config/local.env",
