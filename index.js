@@ -220,7 +220,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         }
 
         // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
-        if (error.errorType === 'oauth-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+        if (error.errorType === 'oauth-service-error' && (error.hasOwnProperty('errorStatus') === false || error.errorStatus >= 500)) {
           logger.notice(
             'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code',
             { debugInfo: error }
@@ -230,7 +230,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         }
 
         // Recoverable Error: The Item Service might be down, will attempt to restart handler.
-        if (error.errorType === 'item-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+        if (error.errorType === 'item-service-error' && (error.hasOwnProperty('errorStatus') === false || error.errorStatus >= 500)) {
           logger.notice(
             'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
             { debugInfo: error }
@@ -240,7 +240,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         }
 
         // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
-        if (error.errorType === 'patron-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+        if (error.errorType === 'patron-service-error' && (error.hasOwnProperty('errorStatus') === false || error.errorStatus >= 500)) {
           logger.notice(
             'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
             { debugInfo: error }
