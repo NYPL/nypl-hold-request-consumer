@@ -196,36 +196,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
           return callback(error.errorMessage);
         }
 
-        // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
-        if (error.errorType === 'oauth-service-error' && error.errorStatus >= 500) {
-          logger.notice(
-            'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error.errorMessage);
-        }
-
-        // Recoverable Error: The Item Service might be down, will attempt to restart handler.
-        if (error.errorType === 'item-service-error' && error.errorStatus >= 500) {
-          logger.notice(
-            'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error.errorMessage);
-        }
-
-        // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
-        if (error.errorType === 'patron-service-error' && error.errorStatus >= 500) {
-          logger.notice(
-            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
-            { debugInfo: error }
-          );
-
-          return callback(error.errorMessage);
-        }
-
         // Recoverable Error: The OAuth Service returned a 200 response however, the access_token was not defined; will attempt to restart handler.
         if (error.errorType === 'empty-access-token-from-oauth-service') {
           logger.notice(
@@ -243,6 +213,36 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
           logger.notice(
             'restarting the HoldRequestConsumer Lambda; OAuth access_token has expired, cannot continue fulfilling NYPL Data API requests',
+            { debugInfo: error }
+          );
+
+          return callback(error.errorMessage);
+        }
+
+        // Recoverable Error: The OAuth Service might be down, will attempt to restart handler.
+        if (error.errorType === 'oauth-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+          logger.notice(
+            'restarting the HoldRequestConsumer Lambda; the OAuth service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return callback(error.errorMessage);
+        }
+
+        // Recoverable Error: The Item Service might be down, will attempt to restart handler.
+        if (error.errorType === 'item-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+          logger.notice(
+            'restarting the HoldRequestConsumer Lambda; the Item Service returned a 5xx status code',
+            { debugInfo: error }
+          );
+
+          return callback(error.errorMessage);
+        }
+
+        // Recoverable Error: The Patron Service might be down, will attempt to restart handler.
+        if (error.errorType === 'patron-service-error' && (!error.hasOwnProperty('errorStatus') || error.errorStatus >= 500)) {
+          logger.notice(
+            'restarting the HoldRequestConsumer Lambda; the Patron Service returned a 5xx status code',
             { debugInfo: error }
           );
 
