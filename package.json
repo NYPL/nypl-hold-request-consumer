@@ -42,9 +42,9 @@
   "dependencies": {
     "@nypl/nypl-core-objects": "1.1.7",
     "@nypl/nypl-streams-client": "0.1.4",
-    "@nypl/scsb-rest-client": "1.0.2",
+    "@nypl/scsb-rest-client": "1.0.4",
     "async": "2.5.0",
-    "aws-sdk": "2.99.0",
+    "aws-sdk": "2.106.0",
     "axios": "0.16.2",
     "circular-json": "0.3.3",
     "lambda-env-vars": "0.4.0",
