@@ -4,12 +4,15 @@ const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const CACHE = require('../globals/index');
 
 const ResultStreamHelper = module.exports = {
-  postRecordToStream: (obj = {}, streamName = CACHE.getResultStreamName(), schemaName = CACHE.getResultSchemaName()) => {
+  postRecordToStream: (
+    obj = {},
+    streamName = CACHE.getResultStreamName(),
+    schemaName = CACHE.getResultSchemaName(),
+    nyplDataApiBase = CACHE.getNyplDataApiBaseUrl()
+  ) => {
     const functionName = 'postRecordToStream';
     const objectToBePosted = {};
-    const streamsClient = new NyplStreamsClient({
-      nyplDataApiClientBase: CACHE.getNyplDataApiBaseUrl()
-    });
+
 
     if (!obj.holdRequestId || obj.holdRequestId === '') {
       return Promise.reject(
@@ -21,7 +24,7 @@ const ResultStreamHelper = module.exports = {
       );
     }
 
-    if (!streamName) {
+    if (!streamName || streamName === '') {
       return Promise.reject(
         HoldRequestConsumerError({
           message: 'the streamName parameter used to post results is undefined',
@@ -30,6 +33,28 @@ const ResultStreamHelper = module.exports = {
         })
       );
     }
+
+    if (!schemaName || schemaName === '') {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the schemaName parameter used to post results is undefined',
+          type: 'undefined-function-parameter',
+          function: functionName
+        })
+      );
+    }
+
+    if (!nyplDataApiBase || nyplDataApiBase === '') {
+      return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'the nyplDataApiBase parameter used to post results is undefined',
+          type: 'undefined-function-parameter',
+          function: functionName
+        })
+      );
+    }
+
+    const streamsClient = new NyplStreamsClient({ nyplDataApiClientBase: nyplDataApiBase });
 
     objectToBePosted.holdRequestId = obj.holdRequestId;
     objectToBePosted.jobId = obj.jobId || null;
