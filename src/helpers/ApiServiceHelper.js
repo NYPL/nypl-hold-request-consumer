@@ -36,6 +36,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (error.response) {
       const statusCode = error.response.status;
       const statusText = error.response.statusText.toLowerCase() || '';
+      const errorResponseInfo = error.response.data || {};
       let errorTypeByService = '';
       let errorMessageByService = '';
 
@@ -51,13 +52,23 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
 
       errorMessage += `; service responded with a status code: (${statusCode}) and status text: ${statusText}`;
 
-      logger.error(
-        errorMessage,
-        { holdRequestId: record.id,
-          record: record,
-          errorResponse: Object.assign({}, error.response.config || {}, error.response.data || {})
-        }
-      );
+      if (statusCode === 401) {
+        logger.notice(
+          errorMessage,
+          { holdRequestId: record.id,
+            record: record,
+            errorResponse: errorResponseInfo
+          }
+        );
+      } else {
+        logger.error(
+          errorMessage,
+          { holdRequestId: record.id,
+            record: record,
+            errorResponse: errorResponseInfo
+          }
+        );
+      }
 
       switch (statusCode) {
         case 400:
@@ -155,7 +166,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       errorMessage,
       { holdRequestId: record.id,
         record: record,
-        error: Object.assign({}, error.message || {}, error.config || {})
+        errorGeneric: error
       }
     );
 
