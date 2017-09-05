@@ -27,7 +27,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the streamName parameter is undefined', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, undefined, 'schemaName', 'apiBaseUrl');
+      const result = postRecordToStream({ holdRequestId: 123 }, undefined, 'schemaName', 'apiBaseUrl');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the streamName parameter used to post results is undefined'
@@ -35,7 +35,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the streamName parameter is null', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, null, 'schemaName', 'apiBaseUrl');
+      const result = postRecordToStream({ holdRequestId: 123 }, null, 'schemaName', 'apiBaseUrl');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the streamName parameter used to post results is undefined'
@@ -43,7 +43,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the streamName parameter is an empty string', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, '', 'schemaName', 'apiBaseUrl');
+      const result = postRecordToStream({ holdRequestId: 123 }, '', 'schemaName', 'apiBaseUrl');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the streamName parameter used to post results is undefined'
@@ -51,7 +51,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the schemaName parameter is undefined', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, 'streamName', undefined, 'apiBaseUrl');
+      const result = postRecordToStream({ holdRequestId: 123 }, 'streamName', undefined, 'apiBaseUrl');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the schemaName parameter used to post results is undefined'
@@ -59,7 +59,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the schemaName parameter is null', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, 'streamName', null, 'apiBaseUrl');
+      const result = postRecordToStream({ holdRequestId: 123 }, 'streamName', null, 'apiBaseUrl');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the schemaName parameter used to post results is undefined'
@@ -75,7 +75,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the nyplDataApiBase parameter is undefined', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, 'streamName', 'schemaName', undefined);
+      const result = postRecordToStream({ holdRequestId: 123 }, 'streamName', 'schemaName', undefined);
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the nyplDataApiBase parameter used to post results is undefined'
@@ -83,7 +83,7 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the nyplDataApiBase parameter is null', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, 'streamName', 'schemaName', null);
+      const result = postRecordToStream({ holdRequestId: 123 }, 'streamName', 'schemaName', null);
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the nyplDataApiBase parameter used to post results is undefined'
@@ -91,12 +91,36 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
     });
 
     it('should reject with a HoldRequestConsumerError if the nyplDataApiBase parameter is an empty string', () => {
-      const result = postRecordToStream({ holdRequestId: '123' }, 'streamName', 'schemaName', '');
+      const result = postRecordToStream({ holdRequestId: 123 }, 'streamName', 'schemaName', '');
       return result.should.be.rejected.and.eventually.have.property(
         'errorMessage',
         'the nyplDataApiBase parameter used to post results is undefined'
       );
     });
 
+    it('should call the NyplStreamsClient.write() function with a valid HoldRequest object', () => {
+      const NyplStreamsClientStubInstance = sinon.stub(NyplStreamsClient.prototype, 'write').returns('success');
+      const result = ResultStreamHelper.postRecordToStream({ holdRequestId: 123 }, 'HoldRequestResult', 'HoldRequestResult', 'https://api.test.org/v1/');
+
+      NyplStreamsClientStubInstance.restore();
+      sinon.assert.calledOnce(NyplStreamsClientStubInstance);
+    });
+
+    it('should call the NyplStreamsClient.write() function with an invalid HoldRequest object', () => {
+      const NyplStreamsClientStubInstance = sinon.stub(NyplStreamsClient.prototype, 'write').returns('error');
+      const result = ResultStreamHelper.postRecordToStream(
+        {
+          holdRequestId: 123,
+          errorType: 'scsb-api-error',
+          errorMessage: 'SCSB API ERROR'
+        },
+        'HoldRequestResult',
+        'HoldRequestResult',
+        'https://api.test.org/v1/'
+      );
+
+      NyplStreamsClientStubInstance.restore();
+      sinon.assert.calledOnce(NyplStreamsClientStubInstance);
+    });
   });
 });
