@@ -13,7 +13,6 @@ const ResultStreamHelper = module.exports = {
     const functionName = 'postRecordToStream';
     const objectToBePosted = {};
 
-
     if (!obj.holdRequestId || obj.holdRequestId === '') {
       return Promise.reject(
         HoldRequestConsumerError({

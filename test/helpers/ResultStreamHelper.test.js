@@ -1,14 +1,16 @@
 /* eslint-disable semi */
 const chai = require('chai');
+const sinon = require('sinon');
 const chaiAsPromised = require('chai-as-promised');
+const NyplStreamsClient = require('@nypl/nypl-streams-client');
 const ResultStreamHelper = require('../../src/helpers/ResultStreamHelper');
 const expect = chai.expect;
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
-
   describe('postRecordToStream(object, string, string) function', () => {
+
     const postRecordToStream = ResultStreamHelper.postRecordToStream;
 
     it('should reject with a HoldRequestConsumerError if no arguments are passed', () => {
@@ -95,5 +97,6 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
         'the nyplDataApiBase parameter used to post results is undefined'
       );
     });
+
   });
 });
