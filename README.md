@@ -165,7 +165,7 @@ $ npm run deploy-prod
 
 Simply run:
 ```javascript
-$ npm run test
+$ npm run coverage-report
 ```
 
 Executing this NPM command will create a `./coverage/` folder with an interactive UI reporting the coverage analysis, now you can open up `./coverage/index.html` in your browser to view an enhanced report.
@@ -200,12 +200,15 @@ $ npm run lint [filename].js // Will lint the specific JS file
 * [aws-sdk](https://www.npmjs.com/package/aws-sdk)
 * [async](https://www.npmjs.com/package/async)
 * [axios](https://www.npmjs.com/package/axios)
+* [circular-json](https://www.npmjs.com/package/circular-json)
 * [lambda-env-vars](https://www.npmjs.com/package/lambda-env-vars)
 * [qs](https://www.npmjs.com/package/qs)
 * [winston](https://www.npmjs.com/package/winston)
+* [winston-slack-hook](https://www.npmjs.com/package/winston-slack-hook)
 * [node-lambda](https://www.npmjs.com/package/node-lambda)
 * [mocha](https://www.npmjs.com/package/mocha)
 * [chai](https://www.npmjs.com/package/chai)
+* [coveralls](https://www.npmjs.com/package/coveralls)
 * [sinon](https://www.npmjs.com/package/sinon)
 * [sinon-chai](https://www.npmjs.com/package/sinon-chai)
 * [standard-js](https://www.npmjs.com/package/standard)
