@@ -45,12 +45,36 @@ function HoldRequestConsumerModel () {
     );
   }
 
-  this.isRecordsListEmpty = (records) => {
-    if (!Array.isArray(records)) {
-      return true;
+  this.filterScsbUiRecords = (records) => {
+    const functionName = 'filterScsbUiRecords';
+
+    if (Array.isArray(records) && records.length > 0) {
+      logger.info('filtering out records originating from the SCSB UI');
+
+      const filteredRecords = records.filter(record => {
+        if (record.deliveryLocation !== null) {
+          logger.info(`filtered out hold request record (${record.id}); record contained deliveryLocation key and has been removed from the records array for further processing`);
+        }
+
+        return record.deliveryLocation === null;
+      });
+
+      logger.info(`total inital records before SCSB UI filter: ${records.length}; total records to process after SCSB UI filter: ${filteredRecords.length}`);
+
+      return Promise.resolve(filteredRecords);
     }
 
-    if (records.length === 0) {
+    return Promise.reject(
+        HoldRequestConsumerError({
+          message: 'no records to filter; an empty array was passed.',
+          type: 'empty-function-parameter',
+          function: functionName
+        })
+    );
+  }
+
+  this.isRecordsListEmpty = (records) => {
+    if (Array.isArray(records) && records.length === 0) {
       return true;
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable semi */
 const chai = require('chai');
 const expect = chai.expect;
 const HoldRequestConsumerError = require('../../src/models/HoldRequestConsumerError.js');

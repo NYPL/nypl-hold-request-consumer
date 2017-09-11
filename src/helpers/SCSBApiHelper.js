@@ -62,82 +62,40 @@ const SCSBApiHelper = module.exports = {
       const loggerMessage = (records.length > 1) ? `${records.length} records` : `${records.length} record`;
       logger.info(`starting async iteration over ${loggerMessage} to POST into SCSB API`);
       async.mapSeries(records, (item, callback) => {
-        // ONLY POST TO SCSB API IF deliveryLocation does not exist
-        // If it exists, we know the request is coming from the SCSB UI and we terminate our process
-        if (typeof item.deliveryLocation === 'undefined' || item.deliveryLocation === null) {
-          const scsbModel = SCSBApiHelper.generateSCSBModel(item);
-          logger.info(
-            `posting hold request record (${item.id}) to SCSB API; request not initiated from SCSB UI`,
-            { holdRequestId: item.id }
-          );
+        const scsbModel = SCSBApiHelper.generateSCSBModel(item);
 
-          return scsbClient.addRequestItem(scsbModel)
-          .then(result => {
-            item['scsbResponse'] = result;
+        logger.info(
+          `posting hold request record (${item.id}) to SCSB API; request not initiated from SCSB UI`,
+          { holdRequestId: item.id }
+        );
 
-            if (result.success === true) {
-              if (result.requestType === 'EDD') {
-                logger.info(
-                  `hold request record (${item.id}) is an EDD request; will post EDD hold request record to HoldRequestResult stream`,
-                  { holdRequestId: item.id }
-                );
+        return scsbClient.addRequestItem(scsbModel)
+        .then(result => {
+          item['scsbResponse'] = result;
 
-                ResultStreamHelper.postRecordToStream({
-                  holdRequestId: item.id,
-                  jobId: item.jobId
-                })
-                .then(res => {
-                  logger.info(
-                    `successfully posted EDD hold request record (${item.id}) to HoldRequestResult stream, assigned response to existing record`,
-                    { holdRequestId: item.id }
-                  );
-
-                  return callback(null, item);
-                })
-                .catch(err => {
-                  logger.error(
-                    `failed to post EDD hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                    { holdRequestId: item.id, error: err }
-                  );
-
-                  // At this point, we could not POST the failed hold request to the results stream.
-                  // We are exiting the promise chain and restarting the kinesis handler
-                  return callback(HoldRequestConsumerError({
-                    message: `unable to post failed EDD hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                    type: 'hold-request-result-stream-error',
-                    status: err.response && err.response.status ? err.response.status : null,
-                    function: 'postRecordToStream',
-                    error: err
-                  }));
-                });
-              } else {
-                logger.info(`successfully posted hold request record (${item.id}) to SCSB API, assigned response to existing record`, { holdRequestId: item.id });
-                return callback(null, item);
-              }
-            } else {
-              logger.error(
-                `posting failed hold request record (${item.id}) to HoldRequestResult stream; the success flag is FALSE for hold request record; check debugInfo for SCSB error message`,
-                { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
+          if (result.success === true) {
+            if (result.requestType === 'EDD') {
+              logger.info(
+                `hold request record (${item.id}) is an EDD request; will post EDD hold request record to HoldRequestResult stream`,
+                { holdRequestId: item.id }
               );
 
-              return ResultStreamHelper.postRecordToStream({
+              ResultStreamHelper.postRecordToStream({
                 holdRequestId: item.id,
-                jobId: item.jobId,
-                errorType: 'scsb-api-response-success-false',
-                errorMessage: `the SCSB API returned a false success flag for hold request record: ${item.id}; ${result.screenMessage}`
+                jobId: item.jobId
               })
-              .then(response => {
+              .then(res => {
                 logger.info(
-                  `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream; assigned SCSB response to existing record object`,
+                  `successfully posted EDD hold request record (${item.id}) to HoldRequestResult stream, assigned response to existing record`,
                   { holdRequestId: item.id }
                 );
 
                 return callback(null, item);
               })
-              .catch(error => {
+              .catch(err => {
                 logger.error(
-                  `unable to post hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                  { holdRequestId: item.id, error: error }
+                  `failed to post EDD hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                  { holdRequestId: item.id, error: err }
                 );
 
                 // At this point, we could not POST the failed hold request to the results stream.
@@ -145,61 +103,97 @@ const SCSBApiHelper = module.exports = {
                 return callback(HoldRequestConsumerError({
                   message: `unable to post failed EDD hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
                   type: 'hold-request-result-stream-error',
-                  status: error.response && error.response.status ? error.response.status : null,
+                  status: err.response && err.response.status ? err.response.status : null,
                   function: 'postRecordToStream',
-                  error: error
+                  error: err
                 }));
               });
+            } else {
+              logger.info(`successfully posted hold request record (${item.id}) to SCSB API, assigned response to existing record`, { holdRequestId: item.id });
+              return callback(null, item);
             }
-          })
-          .catch(errorResponse => {
-            // SCSB API ERROR
+          } else {
             logger.error(
-              `unable to post hold request record (${item.id}) to SCSB API, received an error from SCSB API; posting record to HoldRequestResult stream`,
-              { holdRequestId: item.id, record: item, error: errorResponse }
+              `posting failed hold request record (${item.id}) to HoldRequestResult stream; the success flag is FALSE for hold request record; check debugInfo for SCSB error message`,
+              { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
             );
 
             return ResultStreamHelper.postRecordToStream({
               holdRequestId: item.id,
               jobId: item.jobId,
-              errorType: 'scsb-api-error',
-              errorMessage: `the SCSB API responded with an error while processing hold request record: ${item.id}`
+              errorType: 'scsb-api-response-success-false',
+              errorMessage: `the SCSB API returned a false success flag for hold request record: ${item.id}; ${result.screenMessage}`
             })
-            .then(success => {
+            .then(response => {
               logger.info(
-                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
-                { holdRequestId: item.id, successResponse: success }
+                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream; assigned SCSB response to existing record object`,
+                { holdRequestId: item.id }
               );
 
-              if (errorResponse && errorResponse.statusCode !== 404) {
-                return callback(HoldRequestConsumerError({
-                  message: 'the SCSB API responded with an error',
-                  type: 'scsb-api-error',
-                  status: errorResponse.statusCode,
-                  function: 'postRecordToStream',
-                  error: errorResponse
-                }));
-              } else {
-                return callback(null, item);
-              }
+              return callback(null, item);
             })
-            .catch(failure => {
-              if (failure) {
-                // At this point, we could not POST the failed hold request to the results stream.
-                // We are exiting the promise chain and restarting the kinesis handler
-                return callback(HoldRequestConsumerError({
-                  message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-                  type: 'hold-request-result-stream-error',
-                  function: 'postRecordToStream',
-                  error: failure
-                }));
-              }
+            .catch(error => {
+              logger.error(
+                `unable to post hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                { holdRequestId: item.id, error: error }
+              );
+
+              // At this point, we could not POST the failed hold request to the results stream.
+              // We are exiting the promise chain and restarting the kinesis handler
+              return callback(HoldRequestConsumerError({
+                message: `unable to post failed EDD hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-result-stream-error',
+                status: error.response && error.response.status ? error.response.status : null,
+                function: 'postRecordToStream',
+                error: error
+              }));
             });
+          }
+        })
+        .catch(errorResponse => {
+          // SCSB API ERROR
+          logger.error(
+            `unable to post hold request record (${item.id}) to SCSB API, received an error from SCSB API; posting record to HoldRequestResult stream`,
+            { holdRequestId: item.id, record: item, error: errorResponse }
+          );
+
+          return ResultStreamHelper.postRecordToStream({
+            holdRequestId: item.id,
+            jobId: item.jobId,
+            errorType: 'scsb-api-error',
+            errorMessage: `the SCSB API responded with an error while processing hold request record: ${item.id}`
+          })
+          .then(success => {
+            logger.info(
+              `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
+              { holdRequestId: item.id, successResponse: success }
+            );
+
+            if (errorResponse && errorResponse.statusCode !== 404) {
+              return callback(HoldRequestConsumerError({
+                message: 'the SCSB API responded with an error',
+                type: 'scsb-api-error',
+                status: errorResponse.statusCode,
+                function: 'postRecordToStream',
+                error: errorResponse
+              }));
+            } else {
+              return callback(null, item);
+            }
+          })
+          .catch(failure => {
+            if (failure) {
+              // At this point, we could not POST the failed hold request to the results stream.
+              // We are exiting the promise chain and restarting the kinesis handler
+              return callback(HoldRequestConsumerError({
+                message: `unable to post failed hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-result-stream-error',
+                function: 'postRecordToStream',
+                error: failure
+              }));
+            }
           });
-        } else {
-          logger.info(`hold request record (${item.id}) was initiated from SCSB UI, will not process POST request`);
-          return callback(null, item);
-        }
+        });
       }, (err, results) => {
         return (err) ? reject(err) : resolve(results.filter(n => n));
       });
