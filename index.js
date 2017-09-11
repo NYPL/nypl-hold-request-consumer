@@ -120,12 +120,21 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       return hrcModel.filterProcessedRecords(result[1]);
     })
-    .then(filteredRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
-      filteredRecordsToProcess,
-      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http GET requests to the Item Service; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing; no fatal errors have occured'
+    .then(filteredUnprocessedRecords => hrcModel.validateRemainingRecordsToProcess(
+      filteredUnprocessedRecords,
+      'the lambda has completed processing; the hold request records array is empty; this occurs when records contained the proccessed flag set to TRUE and were filtered from further processing; no fatal errors have occured'
     ))
-    .then(remainingFilteredRecordsToProcess => {
-      hrcModel.setRecords(remainingFilteredRecordsToProcess);
+    .then(unprocessedRecords => {
+      hrcModel.setRecords(unprocessedRecords);
+
+      return hrcModel.filterScsbUiRecords(hrcModel.getRecords());
+    })
+    .then(filteredScsbRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
+      filteredScsbRecordsToProcess,
+      'the lambda has completed processing; the hold request records array is empty; records initiated from the SCSB UI have been filtered out resulting in an empty array; no fatal errors have occured'
+    ))
+    .then(remainingRecordsToProcess => {
+      hrcModel.setRecords(remainingRecordsToProcess);
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),

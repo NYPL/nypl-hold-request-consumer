@@ -191,6 +191,22 @@
       "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
       "awsRegion": "us-east-1",
       "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
+    },
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "s1",
+        "sequenceNumber": "00000000000000000000000000000000000000000000000000000001",
+        "data": "pAVIZDFjZjNhNDMtN2I1ZS00NDg3LWFhMGUtNWZiNTBmZjc4ZDM2DjY3NzkzNjYWc2llcnJhLW55cGwCMjIwMTctMDktMTFUMTQ6MDQ6MjEtMDQ6MDAAAAACCGhvbGQCaRAxMDAxMDYzMAAAAAIETkYA",
+        "approximateArrivalTimestamp": 1428537600
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:00000000000000000000000000000000000000000000000000000001",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::EXAMPLE",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/IndexDocument"
     }
   ]
 }
