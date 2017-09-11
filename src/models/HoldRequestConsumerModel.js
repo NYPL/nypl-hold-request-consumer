@@ -74,10 +74,6 @@ function HoldRequestConsumerModel () {
   }
 
   this.isRecordsListEmpty = (records) => {
-    if (Array.isArray(records) === false) {
-      return false;
-    }
-
     if (Array.isArray(records) && records.length === 0) {
       return true;
     }

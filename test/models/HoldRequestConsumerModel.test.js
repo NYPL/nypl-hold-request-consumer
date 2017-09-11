@@ -13,6 +13,16 @@ describe('HoldRequestConsumer Lambda: HoldRequestConsumeModel Factory', () => {
     it('should initialize the records instance property to null', () => {
       expect(hrcModel.records).to.equal(null);
     });
+
+    it('should initialize as an instance of HoldRequestConsumerModel', () => {
+      expect(hrcModel instanceof HoldRequestConsumerModel).to.be.true;
+    });
+
+    it('should return a NEW instance when assigned without new', () => {
+      const hrcModelWithoutNew = HoldRequestConsumerModel();
+
+      expect(hrcModelWithoutNew instanceof HoldRequestConsumerModel).to.be.true;
+    });
   });
 
   describe('getRecords() function', () => {
