@@ -267,8 +267,8 @@ const SCSBApiHelper = module.exports = {
     }
 
     // Extract Patron Barcode
-    if (object.patronInfo && object.patronInfo.barCode) {
-      scsbModel.patronBarcode = object.patronInfo.barCode;
+    if (object.patronInfo && Array.isArray(object.patronInfo.barCodes) && object.patronInfo.barCodes.length) {
+      scsbModel.patronBarcode = object.patronInfo.barCodes[0]; // obtain first barcode item in array
     }
 
     if (object.item) {
