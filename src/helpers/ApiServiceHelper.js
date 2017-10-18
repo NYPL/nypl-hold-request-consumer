@@ -258,17 +258,61 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       async.mapSeries(records, (item, callback) => {
         // Only process GET requests if the patron value is defined
         if (item.patron && item.patron !== '') {
-          const patronBarcodeApi = `${nyplDataApiBaseUrl}patrons/${item.patron}/barcode`;
+          const patronBarcodeApi = `${nyplDataApiBaseUrl}patrons/${item.patron}`;
 
           logger.info(`fetching Patron data for hold request record (${item.id})`, { holdRequestId: item.id });
           return axios.get(patronBarcodeApi, this.constructApiHeaders(token))
           .then(response => {
-            logger.info(
-              `successfully fetched Patron data, assigned response to hold request record (${item.id})`,
-              { holdRequestId: item.id }
+            // Assign response object
+            const patronApiResponse = response.data.data;
+
+            // Verify existence of the patron barCodes array
+            if (patronApiResponse && Array.isArray(patronApiResponse.barCodes) && patronApiResponse.barCodes.length) {
+              logger.info(
+                `successfully fetched Patron data, assigned response to hold request record (${item.id})`,
+                { holdRequestId: item.id }
+              );
+
+              item['patronInfo'] = response.data.data;
+              return callback(null, item);
+            }
+
+            // Post failure to HoldRequestResult stream if the patron barcodes array is empty or undefined
+            logger.notice(
+              `missing patron barCodes array in Patron Service response for hold request record (${item.id}); will post to HoldRequestResult stream`,
+              { holdRequestId: item.id, record: item }
             );
-            item['patronInfo'] = response.data.data;
-            return callback(null, item);
+
+            return ResultStreamHelper.postRecordToStream({
+              holdRequestId: item.id,
+              jobId: item.jobId,
+              errorType: 'hold-request-record-missing-patron-data',
+              errorMessage: `missing patron barCodes array in Patron Service response for hold request record (${item.id})`
+            })
+            .then(res => {
+              logger.info(
+                `successfully posted failed hold request record (${item.id}) to HoldRequestResult stream`,
+                { holdRequestId: item.id }
+              );
+              // will skip to the next item and filter out record that is null
+              return callback(null);
+            })
+            .catch(err => {
+              logger.error(
+                `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                { holdRequestId: item.id, error: err }
+              );
+
+              // At this point, we could not POST the failed hold request to the results stream.
+              // We are exiting the promise chain and restarting the kinesis handler
+              return callback(HoldRequestConsumerError({
+                message: `unable to post failed hold request record (${item.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-result-stream-error',
+                status: err.response && err.response.status ? err.response.status : null,
+                function: 'postRecordToStream',
+                error: err
+              }));
+            });
           })
           .catch((error) => {
             logger.notice(

@@ -258,5 +258,17 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
 
       return expect(result).to.eql({ requestingInstitution: 'NYPL', requestType: 'RETRIEVAL', itemOwningInstitution: 'NYPL' });
     });
+
+    it('should return an object without a patronBarcode property if the barCodes array supplied is empty', () => {
+      const result = generateSCSBModel({ requestType: 'hold', nyplSource: 'sierra-nypl', patronInfo: { barCodes: [] } });
+
+      return expect(result).to.eql({ requestingInstitution: 'NYPL', requestType: 'RETRIEVAL', itemOwningInstitution: 'NYPL' });
+    });
+
+    it('should return an object with properties (requestingInstitution, requestType and itemOwningInstitution and patronBarcode) if requestType is hold and nyplSource is sierra-nypl and the barCodes array is defined', () => {
+      const result = generateSCSBModel({ requestType: 'hold', nyplSource: 'sierra-nypl', patronInfo: { barCodes: ['1234'] } });
+
+      return expect(result).to.eql({ requestingInstitution: 'NYPL', requestType: 'RETRIEVAL', itemOwningInstitution: 'NYPL', patronBarcode: '1234' });
+    });
   });
 });
