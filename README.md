@@ -17,7 +17,7 @@ An AWS Lambda written in Node JS, responsible for listening to a stream of Hold 
 - [Dependencies](#npm-dependencies)
 
 ## Version
-> v0.0.1
+> v1.0
 
 ## Requirements
 > [Node 6.10.0](https://nodejs.org/docs/v6.1.0/api/)
@@ -80,11 +80,6 @@ $ npm run setup-local-env // Used in local development when running `npm run loc
 $ npm run setup-dev-env
 ```
 
-* Set up your **QA** `.env` file as `./config/qa.env`
-```console
-$ npm run setup-qa-env
-```
-
 * Set up your **PRODUCTION** `.env` file as `./config/prod.env`
 ```console
 $ npm run setup-prod-env
@@ -118,11 +113,6 @@ Running the following NPM Commands will:
 $ npm run setup-dev-sources
 ```
 
-* Set up your **QA** `event_sources_qa.json` file in `./config/`
-```console
-$ npm run setup-qa-sources
-```
-
 * Set up your **PRODUCTION** `event_sources_prod.json` file in `./config/`
 ```console
 $ npm run setup-prod-sources
@@ -147,11 +137,6 @@ The following NPM Commands will execute the `node-lambda deploy` command mapping
 * Runs `node-lambda deploy` with **DEVELOPMENT** configurations
 ```console
 $ npm run deploy-dev
-```
-
-* Runs `node-lambda deploy` with **QA** configurations
-```console
-$ npm run deploy-qa
 ```
 
 * Runs `node-lambda deploy` with **PRODUCTION** configurations
