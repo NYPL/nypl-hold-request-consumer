@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/NYPL/nypl-hold-request-consumer#readme",
   "dependencies": {
-    "@nypl/nypl-core-objects": "1.1.7",
+    "@nypl/nypl-core-objects": "1.3.0",
     "@nypl/nypl-streams-client": "0.1.4",
     "@nypl/scsb-rest-client": "1.0.4",
     "async": "2.5.0",
