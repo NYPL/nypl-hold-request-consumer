@@ -11,7 +11,6 @@ An AWS Lambda written in Node JS, responsible for listening to a stream of Hold 
   - [Installation](#installation)
   - [Setup Configurations](#setup-configurations)
   - [Developing Locally](#developing-locally)
-  - [Deploying your Lambda](#deploying-your-lambda)
   - [Tests](#tests)
   - [Linting](#linting)
 - [Dependencies](#npm-dependencies)
@@ -20,7 +19,7 @@ An AWS Lambda written in Node JS, responsible for listening to a stream of Hold 
 > v1.0
 
 ## Requirements
-> [Node 6.10.0](https://nodejs.org/docs/v6.1.0/api/)
+> [Node 6.10.1](https://nodejs.org/docs/v6.10.1/api/)
 
 ## Getting Started
 
@@ -33,115 +32,30 @@ $ npm install
 
 ### Setup Configurations
 
-Once all dependencies are installed, you want to run the following NPM commands included in the `package.json` configuration file to setup a local development environment.
+All deployment configuration is versioned in `./config/`. *However..*
 
-#### Step 1: Create an `.env` file for the `node-lambda` module
-> Copies the sample .env file under ./sample/.env.sample into ./.env
+The app expects one secret configuration param - `SLACK_WEBHOOK_URL` - to be plaintext. For the purpose of putting all configuration in source control, we've gone ahead and encrypted it as `SLACK_WEBHOOK_URL_ENCRYPTED`. The actual deployed variable remains plaintext and named `SLACK_WEBHOOK_URL`. Thus, Travis can safely deploy to any environment without overwriting the *real* param. We should correct this situtation in the future by modifying the app to decrypt `SLACK_WEBHOOK_URL`.
 
-```console
-$ npm run setup-node-lambda-env
-```
-
-#### Step 2: Add your AWS environment variables
-Once the `.env` file is copied, open the file and edit the following:
-```console
-AWS_ENVIRONMENT=development
-AWS_ACCESS_KEY_ID=<YOUR KEY ID>
-AWS_SECRET_ACCESS_KEY=<YOUR SECRET ACCESS KEY>
-AWS_PROFILE=
-AWS_SESSION_TOKEN=
-AWS_ROLE_ARN=<ROLE OBTAINED FROM AWS CONSOLE>
-AWS_REGION=us-east-1
-AWS_FUNCTION_NAME=<FUNCTION NAME> (OPTIONAL)
-AWS_HANDLER=index.handler
-AWS_MEMORY_SIZE=128
-AWS_TIMEOUT=3
-AWS_DESCRIPTION=
-AWS_RUNTIME=nodejs6.10
-AWS_VPC_SUBNETS=
-AWS_VPC_SECURITY_GROUPS=
-AWS_TRACING_CONFIG=
-EXCLUDE_GLOBS="event.json"
-PACKAGE_DIRECTORY=build
-```
-
-#### Step 3: Setup your environment specific `{environment}.env` file
-
-Running the following NPM Commands will:
-
-* Set up your **LOCAL** `.env` file as `./config/local.env` used for local development
-
-```console
-$ npm run setup-local-env // Used in local development when running `npm run local-run`
-```
-
-* Set up your **DEVELOPMENT** `.env` file as `./config/dev.env`
-```console
-$ npm run setup-dev-env
-```
-
-* Set up your **PRODUCTION** `.env` file as `./config/prod.env`
-```console
-$ npm run setup-prod-env
-```
-
-These environment specific `.env` files will be used to set **environment variables** when deployed by the `node-lambda` module.
-
-An example of the sample deployment environment `.env` file:
-```console
-NYPL_DATA_API_URL=XXX
-OAUTH_PROVIDER_URL=XXX
-OAUTH_PROVIDER_SCOPE=XXX // Encrypted in AWS
-OAUTH_CLIENT_ID=XXX // Encrypted in AWS
-OAUTH_CLIENT_SECRET=XXX // Encrypted in AWS
-HOLD_REQUEST_SCHEMA_NAME=XXX
-HOLD_REQUEST_RESULT_STREAM_NAME=XXX
-SCSB_API_BASE_URL=XXX
-SCSB_API_KEY=XXX // Encrypted in AWS
-NODE_ENV=XXX // Use `development` when developing locally via `npm run local-run`. If deploying to AWS via `npm run deploy-ENV` use `production`, this will trigger the decryption client for encrypted ENV variables.
-```
-
-#### Step 4: Setup your environment specific `event_sources_{environment}.json` file
-This file is used by the `node-lambda` module to deploy your Lambda with the correct mappings.
-
-You **must** edit the file once created and add your specific **EventSourceArn** value, found in the AWS Console. If no mapping is necessary, update the file to an empty object `{}`.
-
-Running the following NPM Commands will:
-
-* Set up your **DEVELOPMENT** `event_sources_dev.json` file in `./config/`
-```console
-$ npm run setup-dev-sources
-```
-
-* Set up your **PRODUCTION** `event_sources_prod.json` file in `./config/`
-```console
-$ npm run setup-prod-sources
-```
 ### Developing Locally
+
 To develop and run your Lambda locally you must ensure to complete `Step 1` and `Step 2` of the Setup process.
 
-***REMINDER:*** Your `./config/local.env` and `./.env` environment variables ***MUST*** be configured in order for the next step to work.
+***Note:*** Your `./config/local.env` ***MUST*** be configured in order for the next step to work.
 
-Next, run the following NPM command to use the **sample** event found in `./sample/sample_event.json`.
+This will execute the sample event in `event.json`:
 
-> Exceutes `node lambda run` pointing the the sample event.
 ```console
 $ npm run local-run
 ```
 
 ### Deploying your Lambda
-To deploy your Lambda function via the `node-lambda` module __**ensure**__ you have completed all the steps of the [Setup](#setup-configurations) process and have added all configuration variables required.
 
-The following NPM Commands will execute the `node-lambda deploy` command mapping configurations to the proper environments (qa & production). These commands can be modified in `package.json`.
+Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/master (i.e. production).
 
-* Runs `node-lambda deploy` with **DEVELOPMENT** configurations
-```console
-$ npm run deploy-dev
+To manually deploy:
+
 ```
-
-* Runs `node-lambda deploy` with **PRODUCTION** configurations
-```console
-$ npm run deploy-prod
+npm run deploy-[development|qa|production]
 ```
 
 ### Tests
@@ -168,7 +82,7 @@ $ npm run test // Will run all tests found in the ./test/ path
 $ npm run test [filename].test.js // Will run a specific test for the given filename
 ```
 ### Linting
-This codebase currently uses [Standard JS](https://www.npmjs.com/package/standard) as the JavaScript linter.
+This codebase ~~currently~~ aspires to use [Standard JS](https://www.npmjs.com/package/standard) as the JavaScript linter. (Ed. note: Semi-colons abound.)
 
 To lint files use the following NPM command:
 ```javascript

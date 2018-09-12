@@ -1,13 +1,31 @@
 /* eslint-disable semi */
-require('dotenv').config({ path: '../../config/test.env' });
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper.js');
 const expect = chai.expect;
+const sinon = require('sinon')
+
+const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper.js');
+
+require('dotenv').config({ path: '../../config/test.env' });
+
 chai.should();
 chai.use(chaiAsPromised);
 
 describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
+  const SCSBRestClient = require('@nypl/scsb-rest-client');
+
+  before(() => {
+    process.env.SCSB_API_BASE_URL = 'https://example.com'
+    process.env.SCSB_API_KEY = 'super-secret-fake-key'
+
+    sinon.stub(SCSBRestClient.prototype, 'addRequestItem').callsFake(function () {
+      return Promise.resolve({ success: true })
+    })
+  })
+
+  after(() => {
+    SCSBRestClient.prototype.addRequestItem.restore()
+  })
 
   describe('handlePostingRecordsToSCSBApi() function', () => {
     const handlePostingRecordsToSCSBApi = SCSBApiHelper.handlePostingRecordsToSCSBApi;
@@ -97,13 +115,13 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
           },
           patronInfo: {
             barCode: '34871273465999',
-             name: 'MARLI, RECAPTEST',
-             base64PngBarCode: null,
-             temporary: false
+            name: 'MARLI, RECAPTEST',
+            base64PngBarCode: null,
+            temporary: false
           }
         }
       ];
-      const result = handlePostingRecordsToSCSBApi(testRecords, process.env.SCSB_API_BASE_URL, process.env.SCSB_API_KEY);
+      const result = handlePostingRecordsToSCSBApi(testRecords, process.env.SCSB_API_BASE_URL, process.env.SCSB_API_KEY)
       return result.should.be.fulfilled;
     });
   });
