@@ -1,0 +1,33 @@
+{
+  "SequenceNumber": "49586053432934900701673373594991262976506579788299763714",
+  "ApproximateArrivalTimestamp": "2018-09-13T19:15:56.033Z",
+  "Data": {
+    "id": 3233,
+    "jobId": "114605b9ab76bc4c69",
+    "patron": "5427701",
+    "nyplSource": "sierra-nypl",
+    "createdDate": "2018-09-13T15:15:55-04:00",
+    "updatedDate": null,
+    "success": false,
+    "processed": false,
+    "requestType": "edd",
+    "recordType": "i",
+    "record": "10011630",
+    "pickupLocation": null,
+    "neededBy": "2018-01-07T02:32:51+00:00",
+    "numberOfCopies": 1,
+    "deliveryLocation": null,
+    "docDeliveryData": {
+      "emailAddress": "user@example.com",
+      "chapterTitle": "Chapter One",
+      "startPage": "100",
+      "endPage": "150",
+      "author": "Anonymous",
+      "volume": "159",
+      "issue": "Summer 2017",
+      "requestNotes": "Backup physical delivery requested."
+    },
+    "error": "Item reported as not available."
+  },
+  "PartitionKey": "5b9ab76be5693"
+}
