@@ -129,6 +129,13 @@ Next, run the following NPM command to use the **sample** event found in `./samp
 $ npm run local-run
 ```
 
+There are three more sample events in the `events` folder:
+- DiscoveryEvent.json, simulating a hold request from Discovery UI
+- RecapEvent.json, simulating a hold request from Recap UI
+- EddEvent.json, simulating an edd request from Discovery UI.
+
+HoldRequestConsumer uses the absence/presence of the deliveryLocation property to classify the event as coming from Discovery UI/Recap UI. Only an event from Discovery UI will be processed to the Recap API. The RecapEvent will be filtered out by the HoldRequestConsumer. In case of an event from Discovery UI, if there are errors or in case of an EDD request, the HoldRequestConsumer will write an event to the HoldRequestResult Kinesis Stream. So, of the three events above, only EddEvent.json should result in an event hitting the HoldRequestResultConsumer and an email.
+
 ### Deploying your Lambda
 To deploy your Lambda function via the `node-lambda` module __**ensure**__ you have completed all the steps of the [Setup](#setup-configurations) process and have added all configuration variables required.
 
