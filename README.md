@@ -134,7 +134,7 @@ There are three more sample events in the `events` folder:
 - RecapEvent.json, simulating a hold request from Recap UI
 - EddEvent.json, simulating an edd request from Discovery UI.
 
-HoldRequestConsumer uses the absence/presence of the deliveryLocation property to classify the event as coming from Discovery UI/Recap UI. Only an event from Discovery UI will be processed to the Recap API. The RecapEvent will be filtered out by the HoldRequestConsumer. In case of an event from Discovery UI, if there are errors or in case of an EDD request, the HoldRequestConsumer will write an event to the HoldRequestResult Kinesis Stream. So, of the three events above, only EddEvent.json should result in an event hitting the HoldRequestResultConsumer. Because this event has already been processed, it will not result in an email. For an event to result in an email, it must come from the HoldRequestService (or else the HoldRequestResultConsumer won't be able to find it).
+For details about how each of these events will be processed, see the github repo for the HoldRequestService: https://github.com/NYPL/hold-request-service. As documented there, only the edd request will be passed to the HoldRequestResult stream, and the others will be filtered out. Be aware that if you modify the events they may not be handled as expected by downstream processes since the HoldRequestResultConsumer relies on holds existing in the database.
 
 
 ### Deploying your Lambda
