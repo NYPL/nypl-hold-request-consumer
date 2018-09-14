@@ -1,33 +1,52 @@
 {
-  "SequenceNumber": "49586053432934900701673372256051516091421167038651957250",
-  "ApproximateArrivalTimestamp": "2018-09-13T15:27:07.058Z",
-  "Data": {
-    "id": 3230,
-    "jobId": "114575b9a81ca949cf",
-    "patron": "5427701",
-    "nyplSource": "sierra-nypl",
-    "createdDate": "2018-09-13T11:27:06-04:00",
-    "updatedDate": null,
-    "success": false,
-    "processed": false,
-    "requestType": "hold",
-    "recordType": "i",
-    "record": "10011630",
-    "pickupLocation": "mal",
-    "neededBy": "2018-01-07T02:32:51+00:00",
-    "numberOfCopies": 1,
-    "deliveryLocation": "NW",
-    "docDeliveryData": {
-      "emailAddress": "user@example.com",
-      "chapterTitle": "Chapter One",
-      "startPage": "100",
-      "endPage": "150",
-      "author": "Anonymous",
-      "volume": "159",
-      "issue": "Summer 2017",
-      "requestNotes": "Backup physical delivery requested."
-    },
-    "error": "Item reported as not available."
-  },
-  "PartitionKey": "5b9a81caeaa76"
+  "Records": [
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "sequenceNumber": "49586053432934900701673372256051516091421167038651957250",
+        "approximateArrivalTimestamp": "2018-09-13T15:27:07.058Z",
+        "data": {
+          "id": 3230,
+          "jobId": "114575b9a81ca949cf",
+          "patron": "5427701",
+          "nyplSource": "sierra-nypl",
+          "createdDate": "2018-09-13T11:27:06-04:00",
+          "updatedDate": null,
+          "success": false,
+          "processed": false,
+          "requestType": "hold",
+          "recordType": "i",
+          "record": "10011630",
+          "pickupLocation": "mal",
+          "neededBy": "2018-01-07T02:32:51+00:00",
+          "numberOfCopies": 1,
+          "deliveryLocation": "NW",
+          "docDeliveryData": {
+            "emailAddress": "user@example.com",
+            "chapterTitle": "Chapter One",
+            "startPage": "100",
+            "endPage": "150",
+            "author": "Anonymous",
+            "volume": "159",
+            "issue": "Summer 2017",
+            "requestNotes": "Backup physical delivery requested."
+          },
+          "error": "Item reported as not available."
+        },
+        "partitionKey": "5b9a81caeaa76"
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventName": "aws:kinesis:record",
+      "awsRegion": "us-east-1",
+      "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/HoldRequest"
+    }
+  ],
+  "eventSource": "aws:kinesis",
+  "eventVersion": "1.0",
+  "eventName": "aws:kinesis:record",
+  "awsRegion": "us-east-1",
+  "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
+  "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/HoldRequest"
 }
