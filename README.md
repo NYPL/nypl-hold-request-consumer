@@ -48,6 +48,14 @@ This will execute the sample event in `event.json`:
 $ npm run local-run
 ```
 
+There are three more sample events in the `events` folder:
+- DiscoveryEvent.json, simulating a hold request from Discovery UI
+- RecapEvent.json, simulating a hold request from Recap UI
+- EddEvent.json, simulating an edd request from Discovery UI.
+
+For details about how each of these events will be processed, see the github repo for the HoldRequestService: https://github.com/NYPL/hold-request-service. As documented there, only the edd request will be passed to the HoldRequestResult stream, and the others will be filtered out. Be aware that if you modify the events they may not be handled as expected by downstream processes since the HoldRequestResultConsumer relies on holds existing in the database.
+
+
 ### Deploying your Lambda
 
 Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/master (i.e. production).
