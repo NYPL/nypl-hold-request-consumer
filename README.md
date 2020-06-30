@@ -101,6 +101,15 @@ $ npm run lint // Will lint all files except those listed in package.json under 
 $ npm run lint [filename].js // Will lint the specific JS file
 ```
 
+## Git Workflow
+
+This repo follows a common [Development-QA-Master](https://github.com/NYPL/engineering-general/blob/a19c78b028148465139799f09732e7eb10115eef/standards/git-workflow.md#development-qa-master) git workflow (without tagging or CHANGELOG):
+
+ - Cut feature branch from `development`
+ - After approval, merge into `development`
+ - Merge `development` > `qa`
+ - Merge `qa` > `master`
+
 ## NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
 * [nypl-scsb-rest-client](https://www.npmjs.com/package/@nypl/scsb-rest-client)
