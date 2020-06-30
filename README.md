@@ -60,6 +60,10 @@ For details about how each of these events will be processed, see the github rep
 
 Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/master (i.e. production).
 
+Deployments (AWS account `nypl-digital-dev`):
+ * Production: Lambda > Functions > HoldRequestConsumer-production
+ * QA: Lambda > Functions > HoldRequestConsumer-qa
+
 To manually deploy:
 
 ```
