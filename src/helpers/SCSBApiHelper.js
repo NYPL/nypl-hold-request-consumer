@@ -7,7 +7,8 @@ const ResultStreamHelper = require('../helpers/ResultStreamHelper');
 const logger = require('../helpers/Logger');
 
 const SCSBApiHelper = module.exports = {
-  handlePostingRecordsToSCSBApi: (records, scsbApiBaseUrl, scsbApiKey) => {
+  handlePostingRecords: (records, scsbApiBaseUrl, scsbApiKey) => {
+    console.log("SCSBApiHelper");
     const functionName = 'handlePostingRecordsToSCSBApi';
 
     if (!records || !Array.isArray(records)) {
@@ -68,7 +69,6 @@ const SCSBApiHelper = module.exports = {
           `posting hold request record (${item.id}) to SCSB API; request not initiated from SCSB UI`,
           { holdRequestId: item.id }
         );
-
         return scsbClient.addRequestItem(scsbModel)
         .then(result => {
           item['scsbResponse'] = result;

@@ -4,7 +4,7 @@ const LambdaEnvVars = require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
-const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
+const HoldingLocationHelper = require('./src/helpers/HoldingLocationHelper');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
 const LambdaEnvVarsClient = new LambdaEnvVars.default();
@@ -149,6 +149,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     ))
     .then(recordsToProcessWithItemData => {
       hrcModel.setRecords(recordsToProcessWithItemData);
+      console.log("recordsToProcessWithItemData", recordsToProcessWithItemData);
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),
@@ -163,14 +164,24 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     ))
     .then(recordsToProcessWithPatronData => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
+      const holdLocationsApiData = {
+        onSite: {
+          apiBaseUrl: CACHE.getNyplDataApiBaseUrl(),
+          apiKey: CACHE.getAccessToken(),
+        },
+        scsb: {
+          apiBaseUrl: CACHE.getSCSBApiBaseUrl(),
+          apiKey: CACHE.getSCSBApiKey(),
+        }
+      }
 
-      return SCSBApiHelper.handlePostingRecordsToSCSBApi(
+      return HoldingLocationHelper.handlePostingRecords(
         hrcModel.getRecords(),
-        CACHE.getSCSBApiBaseUrl(),
-        CACHE.getSCSBApiKey()
-      );
+        holdLocationsApiData
+      )
     })
     .then(resultsOfRecordswithScsbResponse => {
+      console.log("resultsOfRecordswithScsbResponse", resultsOfRecordswithScsbResponse);
       const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
 
       logger.info(successMsg);
@@ -315,6 +326,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
 exports.handler = (event, context, callback) => {
   const isProductionEnv = process.env.NODE_ENV === 'production';
+  console.log("callback", callback);
 
   if (event && Array.isArray(event.Records) && event.Records.length > 0) {
     const record = event.Records[0];

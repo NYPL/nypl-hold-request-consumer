@@ -45,7 +45,7 @@ To develop and run your Lambda locally you must ensure to complete `Step 1` and 
 This will execute the sample event in `event.json`:
 
 ```console
-$ npm run local-run
+$ npm run run-local
 ```
 
 There are three more sample events in the `events` folder:

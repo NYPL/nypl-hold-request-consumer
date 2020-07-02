@@ -27,8 +27,8 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
     SCSBRestClient.prototype.addRequestItem.restore()
   })
 
-  describe('handlePostingRecordsToSCSBApi() function', () => {
-    const handlePostingRecordsToSCSBApi = SCSBApiHelper.handlePostingRecordsToSCSBApi;
+  describe('handlePostingRecords() function', () => {
+    const handlePostingRecordsToSCSBApi = SCSBApiHelper.handlePostingRecords;
 
     it('should reject with a HoldRequestConsumerError if the records array parameter is NULL', () => {
       const result = handlePostingRecordsToSCSBApi(null, 'apiBaseUrl', 'apiKey');
