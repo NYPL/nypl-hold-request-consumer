@@ -18,7 +18,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   this.scope = scope;
   this.grantType = grantType;
 
-  this.constructApiHeaders = (token = '', contentType = 'application/json', timeOut = 10000) => {
+  this._constructApiHeaders = (token = '', contentType = 'application/json', timeOut = 10000) => {
     return {
       headers: {
         'Content-Type': contentType,
@@ -28,7 +28,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     };
   };
 
-  this.handleErrorsByStatusCode = (error, record, serviceName, cb) => {
+  this._handleErrorsByStatusCode = (error, record, serviceName, cb) => {
     const functionName = 'handleErrorsByStatusCode';
     const errorType = serviceName.replace(/\s+/g, '-').toLowerCase() + '-error';
     let errorMessage = `an error was received from the ${serviceName} for hold request record (${record.id})`;
@@ -180,7 +180,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     );
   };
 
-  this.processGetItemDataRequests = (records, token, apiUrl) => {
+  this._processGetItemDataRequests = (records, token, apiUrl) => {
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -192,7 +192,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
 
           logger.info(`fetching Item data for hold request record (${item.id})`, { holdRequestId: item.id });
-          return axios.get(itemApi, this.constructApiHeaders(token))
+          return axios.get(itemApi, this._constructApiHeaders(token))
           .then(response => {
             logger.info(`successfully fetched Item data, assigned response to hold request record (${item.id})`, { holdRequestId: item.id });
             item['item'] = response.data.data;
@@ -204,7 +204,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this.handleErrorsByStatusCode(error, item, 'Item Service', callback);
+            return this._handleErrorsByStatusCode(error, item, 'Item Service', callback);
           });
         }
 
@@ -249,7 +249,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this.processGetPatronBarcodeRequests = (records, token, apiUrl) => {
+  this._processGetPatronBarcodeRequests = (records, token, apiUrl) => {
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -261,7 +261,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           const patronBarcodeApi = `${nyplDataApiBaseUrl}patrons/${item.patron}`;
 
           logger.info(`fetching Patron data for hold request record (${item.id})`, { holdRequestId: item.id });
-          return axios.get(patronBarcodeApi, this.constructApiHeaders(token))
+          return axios.get(patronBarcodeApi, this._constructApiHeaders(token))
           .then(response => {
             // Assign response object
             const patronApiResponse = response.data.data;
@@ -320,7 +320,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this.handleErrorsByStatusCode(error, item, 'Patron Service', callback);
+            return this._handleErrorsByStatusCode(error, item, 'Patron Service', callback);
           });
         }
 
@@ -364,6 +364,12 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       });
     });
   };
+
+  this._processPostOnSiteHoldRequests = (requests, token, apiUrl) => {
+    async.mapSeries(request, (item, callback) => {
+      return axios.post(`${apiUrl}on-site-hold-requests`, request, this._constructApiHeaders(token));
+    }
+  }
 
   this.handleHttpAsyncRequests = (records, type, apiUrl, accessToken) => {
     const functionName = 'handleHttpAsyncRequests';
@@ -414,11 +420,15 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (type === 'item-service') {
-      return this.processGetItemDataRequests(records, accessToken, apiUrl);
+      return this._processGetItemDataRequests(records, accessToken, apiUrl);
     }
 
     if (type === 'patron-barcode-service') {
-      return this.processGetPatronBarcodeRequests(records, accessToken, apiUrl);
+      return this._processGetPatronBarcodeRequests(records, accessToken, apiUrl);
+    }
+
+    if (type === 'on-site-hold-request-service') {
+      return this._processPostOnSiteHoldRequests(records, accessToken, apiUrl);
     }
   };
 

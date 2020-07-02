@@ -8,7 +8,6 @@ const logger = require('../helpers/Logger');
 
 const SCSBApiHelper = module.exports = {
   handlePostingRecords: (records, scsbApiBaseUrl, scsbApiKey) => {
-    console.log("SCSBApiHelper");
     const functionName = 'handlePostingRecordsToSCSBApi';
 
     if (!records || !Array.isArray(records)) {

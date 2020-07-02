@@ -149,7 +149,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     ))
     .then(recordsToProcessWithItemData => {
       hrcModel.setRecords(recordsToProcessWithItemData);
-      console.log("recordsToProcessWithItemData", recordsToProcessWithItemData);
 
       return apiHelper.handleHttpAsyncRequests(
         hrcModel.getRecords(),
@@ -164,8 +163,9 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     ))
     .then(recordsToProcessWithPatronData => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
-      const holdLocationsApiData = {
+      const collectionApisData = {
         onSite: {
+          apiHelper,
           apiBaseUrl: CACHE.getNyplDataApiBaseUrl(),
           apiKey: CACHE.getAccessToken(),
         },
@@ -177,7 +177,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       return HoldingLocationHelper.handlePostingRecords(
         hrcModel.getRecords(),
-        holdLocationsApiData
+        collectionApisData
       )
     })
     .then(resultsOfRecordswithScsbResponse => {
@@ -190,6 +190,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, successMsg);
     })
     .catch(error => {
+      console.log(error);
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(
@@ -326,7 +327,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
 exports.handler = (event, context, callback) => {
   const isProductionEnv = process.env.NODE_ENV === 'production';
-  console.log("callback", callback);
 
   if (event && Array.isArray(event.Records) && event.Records.length > 0) {
     const record = event.Records[0];
