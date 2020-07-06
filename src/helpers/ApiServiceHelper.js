@@ -3,7 +3,8 @@ const async = require('async');
 const axios = require('axios');
 const qs = require('qs');
 const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
-const ResultStreamHelper = require('../helpers/ResultStreamHelper')
+const ResultStreamHelper = require('../helpers/ResultStreamHelper');
+const OnSiteHoldRequestHelper = require('./OnSiteHoldRequestHelper');
 const logger = require('../helpers/Logger');
 const CACHE = require('../globals/index');
 
@@ -18,7 +19,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
   this.scope = scope;
   this.grantType = grantType;
 
-  this._constructApiHeaders = (token = '', contentType = 'application/json', timeOut = 10000) => {
+  this.constructApiHeaders = (token = '', contentType = 'application/json', timeOut = 10000) => {
     return {
       headers: {
         'Content-Type': contentType,
@@ -365,12 +366,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this._processPostOnSiteHoldRequests = (requests, token, apiUrl) => {
-    async.mapSeries(request, (item, callback) => {
-      return axios.post(`${apiUrl}on-site-hold-requests`, request, this._constructApiHeaders(token));
-    }
-  }
-
   this.handleHttpAsyncRequests = (records, type, apiUrl, accessToken) => {
     const functionName = 'handleHttpAsyncRequests';
 
@@ -428,7 +423,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (type === 'on-site-hold-request-service') {
-      return this._processPostOnSiteHoldRequests(records, accessToken, apiUrl);
+      return OnSiteHoldRequestHelper.processPostOnSiteHoldRequests(records, accessToken, apiUrl);
     }
   };
 

@@ -14,7 +14,7 @@
           "updatedDate": null,
           "success": false,
           "processed": false,
-          "requestType": "hold",
+          "requestType": "edd",
           "recordType": "i",
           "record": "25094273",
           "pickupLocation": "mal",
