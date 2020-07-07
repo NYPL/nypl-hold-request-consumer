@@ -180,17 +180,17 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         collectionApisData
       )
     })
-    .then(resultsOfRecordswithScsbResponse => {
-      console.log("resultsOfRecordswithScsbResponse", resultsOfRecordswithScsbResponse);
+    .then(resultsOfRecords => {
+      console.log("resultsOfRecords", resultsOfRecords);
       const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
 
       logger.info(successMsg);
-      hrcModel.setRecords(resultsOfRecordswithScsbResponse);
+      hrcModel.setRecords(resultsOfRecords);
 
       return callback(null, successMsg);
     })
     .catch(error => {
-      console.log(error);
+      console.log("error", error);
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(

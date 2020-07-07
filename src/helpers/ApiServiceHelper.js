@@ -29,7 +29,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     };
   };
 
-  this._handleErrorsByStatusCode = (error, record, serviceName, cb) => {
+  this.handleErrorsByStatusCode = (error, record, serviceName, cb) => {
     const functionName = 'handleErrorsByStatusCode';
     const errorType = serviceName.replace(/\s+/g, '-').toLowerCase() + '-error';
     let errorMessage = `an error was received from the ${serviceName} for hold request record (${record.id})`;
@@ -193,7 +193,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
 
           logger.info(`fetching Item data for hold request record (${item.id})`, { holdRequestId: item.id });
-          return axios.get(itemApi, this._constructApiHeaders(token))
+          return axios.get(itemApi, this.constructApiHeaders(token))
           .then(response => {
             logger.info(`successfully fetched Item data, assigned response to hold request record (${item.id})`, { holdRequestId: item.id });
             item['item'] = response.data.data;
@@ -205,7 +205,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this._handleErrorsByStatusCode(error, item, 'Item Service', callback);
+            return this.handleErrorsByStatusCode(error, item, 'Item Service', callback);
           });
         }
 
@@ -262,7 +262,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           const patronBarcodeApi = `${nyplDataApiBaseUrl}patrons/${item.patron}`;
 
           logger.info(`fetching Patron data for hold request record (${item.id})`, { holdRequestId: item.id });
-          return axios.get(patronBarcodeApi, this._constructApiHeaders(token))
+          return axios.get(patronBarcodeApi, this.constructApiHeaders(token))
           .then(response => {
             // Assign response object
             const patronApiResponse = response.data.data;
@@ -321,7 +321,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
               { holdRequestId: item.id, record: item }
             );
 
-            return this._handleErrorsByStatusCode(error, item, 'Patron Service', callback);
+            return this.handleErrorsByStatusCode(error, item, 'Patron Service', callback);
           });
         }
 

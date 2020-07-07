@@ -1,5 +1,6 @@
 const OnSiteHoldRequestHelper = require('./OnSiteHoldRequestHelper');
 const SCSBApiHelper = require('./SCSBApiHelper');
+const logger = require('../helpers/Logger');
 
 const HoldingLocationHelper = module.exports = {
   handlePostingRecords: (records, apiData) => {
@@ -10,7 +11,11 @@ const HoldingLocationHelper = module.exports = {
       return records;
     }, { scsb: [], onSite: [] });
     const resolutions = [];
-    console.log("holdRequestRecords", holdRequestRecords);
+    logger.info(`sorted records into on-site holds and ReCAP holds.`, {
+      totalRecords: records.length,
+      numScsbHoldRequests: holdRequestRecords.scsb.length,
+      numOnSiteHoldRequests: holdRequestRecords.onSite.length
+    });
 
     if (holdRequestRecords.scsb.length) {
       const scsbApiResolution = SCSBApiHelper.handlePostingRecords(
@@ -29,6 +34,14 @@ const HoldingLocationHelper = module.exports = {
       resolutions.push(onSiteHoldRequestResolution);
     };
 
-    return Promise.all(resolutions);
+    return Promise.all(resolutions)
+      .then(resolutions => {
+        const [scsbResolution, onSiteHoldRequestResolution] = resolutions;
+        return [...scsbResolution, ...onSiteHoldRequestResolution];
+      })
+      .catch(resolutions => {
+        const [scsbResolution, onSiteHoldRequestResolution] = resolutions;
+        return [...scsbResolution, ...onSiteHoldRequestResolution];
+      });
   },
 }
