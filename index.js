@@ -181,7 +181,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       )
     })
     .then(resultsOfRecords => {
-      console.log("resultsOfRecords", resultsOfRecords);
       const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
 
       logger.info(successMsg);
@@ -190,7 +189,6 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       return callback(null, successMsg);
     })
     .catch(error => {
-      console.log("error", error);
       // Non-recoverable Error: Avro Schema validation failed, do not restart Lambda
       if (error.name === 'AvroValidationError') {
         logger.error(

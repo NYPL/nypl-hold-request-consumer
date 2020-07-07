@@ -421,10 +421,6 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     if (type === 'patron-barcode-service') {
       return this._processGetPatronBarcodeRequests(records, accessToken, apiUrl);
     }
-
-    if (type === 'on-site-hold-request-service') {
-      return OnSiteHoldRequestHelper.processPostOnSiteHoldRequests(records, accessToken, apiUrl);
-    }
   };
 
   this.setTokenFromOAuthService = () => {

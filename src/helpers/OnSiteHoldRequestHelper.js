@@ -7,7 +7,7 @@ const ResultStreamHelper = require('../helpers/ResultStreamHelper');
 
 const OnSiteHoldRequestHelper = module.exports = {
   handlePostingRecords: (records, apiData) => {
-    return OnSiteHoldRequestHelper.processPostOnSiteHoldRequests(
+    return OnSiteHoldRequestHelper.postOnSiteHoldRequests(
       records,
       apiData
     )
@@ -25,21 +25,16 @@ const OnSiteHoldRequestHelper = module.exports = {
     requestType,
   }) => {
     return {
-      id,
-      jobId,
-      requestType,
-      body: {
-        patron,
-        nyplSource,
-        record,
-        pickupLocation,
-        neededBy,
-        numberOfCopies,
-        docDeliveryData
-      }
+      patron,
+      nyplSource,
+      record,
+      pickupLocation,
+      neededBy,
+      numberOfCopies,
+      docDeliveryData
     };
   },
-  processPostOnSiteHoldRequests: (requests, apiData) => {
+  postOnSiteHoldRequests: (requests, apiData) => {
     const {
       apiHelper,
       apiKey,
@@ -81,8 +76,9 @@ const OnSiteHoldRequestHelper = module.exports = {
             }));
           });
         }
+        const eddLogText = isEdd ? 'EDD ' : '';
         const requestBody = OnSiteHoldRequestHelper.generateModel(request)
-        logger.info(`posting ${isEdd ? 'EDD ' : ''}hold request for on-site item (${requestBody.record})`, { holdRequestId: request.id });
+        logger.info(`posting ${eddLogText}hold request for on-site item (${requestBody.record})`, { holdRequestId: request.id });
         return axios.post(
           `${apiBaseUrl}on-site-hold-requests`,
           requestBody,
@@ -92,7 +88,7 @@ const OnSiteHoldRequestHelper = module.exports = {
             if (response.status === 201) {
               request.success = true;
               logger.info(
-                `on-site hold request record (${request.id}) is an EDD request; will post EDD hold request record to HoldRequestResult stream`,
+                `on-site ${eddLogText}hold request record (${request.id}) is successful; will post hold request record to HoldRequestResult stream`,
                 { holdRequestId: request.id }
               );
 
@@ -102,7 +98,7 @@ const OnSiteHoldRequestHelper = module.exports = {
               })
               .then(res => {
                 logger.info(
-                  `successfully posted on-site EDD hold request record (${request.id}) to HoldRequestResult stream, assigned response to existing record`,
+                  `successfully posted on-site ${eddLogText}hold request record (${request.id}) to HoldRequestResult stream`,
                   { holdRequestId: request.id }
                 );
 
@@ -110,7 +106,7 @@ const OnSiteHoldRequestHelper = module.exports = {
               })
               .catch(err => {
                 logger.error(
-                  `failed to post on-site EDD hold request record (${request.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                  `failed to post on-site ${eddLogText}hold request record (${request.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
                   { holdRequestId: request.id, error: err }
                 );
 
@@ -120,20 +116,42 @@ const OnSiteHoldRequestHelper = module.exports = {
                   status: err.response && err.response.status ? err.response.status : null,
                   function: 'postRecordToStream',
                   error: err
-                }), request);
-                });
-            } else {
-              logger.info(``, { holdRequestId: request.id });
-              return callback(null, request);
+                }));
+              });
             }
           })
           .catch(error => {
             logger.notice(
-              `unable to post on-site hold request (${request.id}) to OnSiteHoldRequestService; will post to HoldRequestResult stream only for status codes 400/404`,
+              `unable to post on-site ${eddLogText}hold request (${request.id}) to OnSiteHoldRequestService; will post to HoldRequestResult stream`,
               { holdRequestId: request.id, holdRequest: request.body }
             );
 
-            return callback(null, request);
+            ResultStreamHelper.postRecordToStream({
+              holdRequestId: request.id,
+              jobId: request.jobId
+            })
+            .then(res => {
+              logger.info(
+                `successfully posted failed on-site ${eddLogText}hold request record (${request.id}) to HoldRequestResult stream`,
+                { holdRequestId: request.id }
+              );
+
+              return callback(null, request);
+            })
+            .catch(err => {
+              logger.error(
+                `failed to post on-site ${eddLogText}hold request record (${request.id}) to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                { holdRequestId: request.id, error: err }
+              );
+
+              return callback(HoldRequestConsumerError({
+                message: `unable to post failed EDD hold request record (${request.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
+                type: 'hold-request-result-stream-error',
+                status: err.response && err.response.status ? err.response.status : null,
+                function: 'postRecordToStream',
+                error: err
+              }));
+            });
           })
       }, (err, results) => {
         return (err) ? reject(err) : resolve(results.filter(n => n))
