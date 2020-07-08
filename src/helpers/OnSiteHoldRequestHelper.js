@@ -5,12 +5,6 @@ const HoldRequestConsumerError = require('../models/HoldRequestConsumerError')
 const ResultStreamHelper = require('../helpers/ResultStreamHelper')
 
 const OnSiteHoldRequestHelper = module.exports = {
-  handlePostingRecords: (records, apiData) => {
-    return OnSiteHoldRequestHelper.postOnSiteHoldRequests(
-      records,
-      apiData
-    )
-  },
   generateModel: ({
     patron,
     nyplSource,
@@ -19,9 +13,6 @@ const OnSiteHoldRequestHelper = module.exports = {
     neededBy,
     numberOfCopies,
     docDeliveryData,
-    id,
-    jobId,
-    requestType
   }) => {
     return {
       patron,
@@ -33,7 +24,7 @@ const OnSiteHoldRequestHelper = module.exports = {
       docDeliveryData
     }
   },
-  postOnSiteHoldRequests: (requests, apiData) => {
+  handlePostingRecords: (requests, apiData) => {
     const {
       apiKey,
       apiBaseUrl
@@ -41,6 +32,10 @@ const OnSiteHoldRequestHelper = module.exports = {
     return new Promise((resolve, reject) => {
       async.mapSeries(requests, (request, callback) => {
         const isEdd = request.docDeliveryData && request.docDeliveryData.emailAddress
+        /*
+          if on-site hold requests are implemented for on-site use
+          this conditional is no longer relevant
+        */
         if (!isEdd) {
           logger.info(`Not implemented: on-site hold request for on-site use`, { holdRequestId: request.id })
           return ResultStreamHelper.postRecordToStream({
@@ -91,7 +86,7 @@ const OnSiteHoldRequestHelper = module.exports = {
           apiHeaders
         )
         .then(response => {
-          if (Math.floor(response.statusCode / 100) === 2) request.success = true
+          if (Math.floor(response.status / 100) === 2) request.success = true
           const { success } = request
           const logLevel = success ? 'info' : 'error'
           logger[logLevel](
@@ -101,7 +96,9 @@ const OnSiteHoldRequestHelper = module.exports = {
 
           ResultStreamHelper.postRecordToStream({
             holdRequestId: request.id,
-            jobId: request.jobId
+            jobId: request.jobId,
+            errorType: success ? null : 'on-site-hold-request-service-post-unsuccessful',
+            errorMessage: success ? null : 'Response from OnSiteHoldRequestService was not successful'
           })
           .then(res => {
             logger.info(
@@ -127,14 +124,18 @@ const OnSiteHoldRequestHelper = module.exports = {
           })
         })
         .catch(error => {
+          const { response } = error;
+          const { statusText, statusCode } = response;
           logger.error(
             `unable to post on-site ${eddLogText}hold request (${request.id}) to OnSiteHoldRequestService; will post to HoldRequestResult stream`,
-            { holdRequestId: request.id, holdRequest: request.body, error }
+            { holdRequestId: request.id, holdRequest: request.body, error: { statusText, statusCode } }
           )
 
           ResultStreamHelper.postRecordToStream({
             holdRequestId: request.id,
-            jobId: request.jobId
+            jobId: request.jobId,
+            errorType: 'on-site-hold-request-service-post-unsuccessful',
+            errorMessage: 'Response from OnSiteHoldRequestService was not successful'
           })
           .then(res => {
             logger.info(

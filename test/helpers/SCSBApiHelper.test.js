@@ -5,6 +5,8 @@ const expect = chai.expect;
 const sinon = require('sinon')
 
 const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper.js');
+const nyplRecapItem = require('../fixtures/nyplRecapItem')
+const recapPatron = require('../fixtures/recapPatron')
 
 require('dotenv').config({ path: '../../config/test.env' });
 
@@ -98,27 +100,8 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
           neededBy: '2018-01-07T02:32:51+00:00',
           numberOfCopies: 1,
           docDeliveryData: {},
-          item: {
-            nyplSource: 'sierra-nypl',
-            bibIds: [ '10026885' ],
-            id: '10011664',
-            nyplType: 'item',
-            updatedDate: '2017-08-07T20:33:50-04:00',
-            createdDate: '2009-02-03T00:51:38-05:00',
-            deletedDate: null,
-            deleted: false,
-            location: { code: 'rc2ma', name: 'OFFSITE - Request in Advance' },
-            status: { code: '-', display: 'AVAILABLE', duedate: null },
-            barcode: '33433000948251',
-            callNumber: '|hJXE 71-1',
-            itemType: null
-          },
-          patronInfo: {
-            barCode: '34871273465999',
-            name: 'MARLI, RECAPTEST',
-            base64PngBarCode: null,
-            temporary: false
-          }
+          item: nyplRecapItem,
+          patronInfo: recapPatron
         }
       ];
       const result = handlePostingRecordsToSCSBApi(testRecords, process.env.SCSB_API_BASE_URL, process.env.SCSB_API_KEY)

@@ -106,6 +106,15 @@ describe('HoldRequestConsumer Lambda: ResultStreamHelper', () => {
       sinon.assert.calledOnce(NyplStreamsClientStubInstance);
     });
 
+    it('should call the NyplStreamsClient.write() function with a valid HoldRequest object with `errorType` equal to null', () => {
+      const NyplStreamsClientStubInstance = sinon.stub(NyplStreamsClient.prototype, 'write').returns('success');
+      const result = ResultStreamHelper.postRecordToStream({ holdRequestId: 123, errorType: null }, 'HoldRequestResult', 'HoldRequestResult', 'https://api.test.org/v1/');
+
+      NyplStreamsClientStubInstance.restore();
+      sinon.assert.calledOnce(NyplStreamsClientStubInstance);
+      expect(NyplStreamsClientStubInstance.args[0][1].success).to.be.true;
+    });
+
     it('should call the NyplStreamsClient.write() function with an invalid HoldRequest object', () => {
       const NyplStreamsClientStubInstance = sinon.stub(NyplStreamsClient.prototype, 'write').returns('error');
       const result = ResultStreamHelper.postRecordToStream(
