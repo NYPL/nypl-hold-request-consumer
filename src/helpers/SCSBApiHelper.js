@@ -97,7 +97,7 @@ const SCSBApiHelper = module.exports = {
                   { holdRequestId: item.id, error: err }
                 );
 
-                // At this point, we could not POST the failed hold request to the results stream.
+                // At this point, we could not POST the hold request to the results stream.
                 // We are exiting the promise chain and restarting the kinesis handler
                 return callback(HoldRequestConsumerError({
                   message: `unable to post failed EDD hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,

@@ -4,10 +4,10 @@ const LambdaEnvVars = require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
-const HoldingLocationHelper = require('./src/helpers/HoldingLocationHelper');
+const HoldRequestDispatcher = require('./src/dispatchers/HoldRequestDispatcher');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
-const LambdaEnvVarsClient = new LambdaEnvVars.default();
+const LambdaEnvVarsClient = new LambdaEnvVars.default(); // eslint-disable-line
 
 exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
@@ -165,17 +165,16 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
       const collectionApisData = {
         onSite: {
-          apiHelper,
           apiBaseUrl: CACHE.getNyplDataApiBaseUrl(),
-          apiKey: CACHE.getAccessToken(),
+          apiKey: CACHE.getAccessToken()
         },
         scsb: {
           apiBaseUrl: CACHE.getSCSBApiBaseUrl(),
-          apiKey: CACHE.getSCSBApiKey(),
+          apiKey: CACHE.getSCSBApiKey()
         }
       }
 
-      return HoldingLocationHelper.handlePostingRecords(
+      return HoldRequestDispatcher.handlePostingRecords(
         hrcModel.getRecords(),
         collectionApisData
       )

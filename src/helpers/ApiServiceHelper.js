@@ -4,7 +4,6 @@ const axios = require('axios');
 const qs = require('qs');
 const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
 const ResultStreamHelper = require('../helpers/ResultStreamHelper');
-const OnSiteHoldRequestHelper = require('./OnSiteHoldRequestHelper');
 const logger = require('../helpers/Logger');
 const CACHE = require('../globals/index');
 
