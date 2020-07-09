@@ -129,8 +129,8 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       return hrcModel.filterScsbUiRecords(hrcModel.getRecords());
     })
-    .then(filteredScsbRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
-      filteredScsbRecordsToProcess,
+    .then(filteredRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
+      filteredRecordsToProcess,
       'the lambda has completed processing; the hold request records array is empty; records initiated from the SCSB UI have been filtered out resulting in an empty array; no fatal errors have occured'
     ))
     .then(remainingRecordsToProcess => {
@@ -159,7 +159,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     })
     .then(recordsWithPatronData => hrcModel.validateRemainingRecordsToProcess(
       recordsWithPatronData,
-      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
+      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API or OnSiteHoldRequestService; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
     ))
     .then(recordsToProcessWithPatronData => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
