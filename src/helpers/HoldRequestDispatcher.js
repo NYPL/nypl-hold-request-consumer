@@ -42,7 +42,6 @@ const HoldRequestDispatcher = module.exports = {
       })
   },
   sortRecords: (records) => records.reduce((records, record) => {
-    console.log(record.item);
     (/^rc/i.test(record.item.location.code))
     ? records.scsb.push(record) : records.onSite.push(record)
 
