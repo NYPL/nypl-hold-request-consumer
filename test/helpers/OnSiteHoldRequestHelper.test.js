@@ -1,11 +1,10 @@
 const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
 const expect = chai.expect
 const sinon = require('sinon')
 const axios = require('axios');
 const MockAdapter = require('axios-mock-adapter');
 
-const OnSiteHoldRequestHelper = require('../../src/helpers/OnSiteHoldRequestHelper.js')
+const OnSiteHoldRequestHelper = require('../../src/helpers/OnSiteHoldRequestHelper')
 const ResultStreamHelper = require('../../src/helpers/ResultStreamHelper')
 
 const onSiteEddRequest = require('../fixtures/onSiteEddRequest')
@@ -13,10 +12,7 @@ const onSiteRequest = require('../fixtures/onSiteRequest')
 
 const mock = new MockAdapter(axios);
 
-// chai.should();
-// chai.use(chaiAsPromised);
-
-describe('HoldRequestConsumer Lambda: On-site Hold Request Helper', () => {
+describe('HoldRequestConsumer Lambda: OnSiteHoldRequestHelper', () => {
   let postRecordToStreamStub;
   const apiBaseUrl = 'www.example.com/';
   before(() => {

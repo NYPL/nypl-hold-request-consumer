@@ -5,8 +5,7 @@ const expect = chai.expect;
 const sinon = require('sinon')
 
 const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper.js');
-const nyplRecapItem = require('../fixtures/nyplRecapItem')
-const recapPatron = require('../fixtures/recapPatron')
+const nyplRecapRecord = require('../fixtures/nyplRecapRequest')
 
 require('dotenv').config({ path: '../../config/test.env' });
 
@@ -83,27 +82,7 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
     });
 
     it('should validate all required parameters and execute a successful POST request to the SCSB API', () => {
-      const testRecords = [
-        {
-          id: 214,
-          jobId: 'be7a699a-f45e-4cf6-91d0-f080b90325be',
-          patron: '6779371',
-          nyplSource: 'sierra-nypl',
-          createdDate: '2017-07-12T11:39:42-04:00',
-          updatedDate: null,
-          success: false,
-          processed: false,
-          requestType: 'hold',
-          recordType: 'i',
-          record: '10011664',
-          pickupLocation: 'mal',
-          neededBy: '2018-01-07T02:32:51+00:00',
-          numberOfCopies: 1,
-          docDeliveryData: {},
-          item: nyplRecapItem,
-          patronInfo: recapPatron
-        }
-      ];
+      const testRecords = [ nyplRecapRecord ];
       const result = handlePostingRecordsToSCSBApi(testRecords, process.env.SCSB_API_BASE_URL, process.env.SCSB_API_KEY)
       return result.should.be.fulfilled;
     });

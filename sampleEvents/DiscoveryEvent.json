@@ -14,6 +14,6 @@
       "awsRegion": "us-east-1",
       "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
       "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/HoldRequest"
-    },
-  ],
+    }
+  ]
 }

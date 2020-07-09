@@ -4,7 +4,7 @@ const LambdaEnvVars = require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
-const HoldRequestDispatcher = require('./src/dispatchers/HoldRequestDispatcher');
+const HoldRequestDispatcher = require('./src/helpers/HoldRequestDispatcher');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
 const LambdaEnvVarsClient = new LambdaEnvVars.default(); // eslint-disable-line
@@ -174,7 +174,7 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
         }
       }
 
-      return HoldRequestDispatcher.handlePostingRecords(
+      return HoldRequestDispatcher.dispatchRecords(
         hrcModel.getRecords(),
         collectionApisData
       )
