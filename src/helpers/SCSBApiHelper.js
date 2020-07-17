@@ -7,7 +7,7 @@ const ResultStreamHelper = require('../helpers/ResultStreamHelper');
 const logger = require('../helpers/Logger');
 
 const SCSBApiHelper = module.exports = {
-  handlePostingRecordsToSCSBApi: (records, scsbApiBaseUrl, scsbApiKey) => {
+  handlePostingRecords: (records, scsbApiBaseUrl, scsbApiKey) => {
     const functionName = 'handlePostingRecordsToSCSBApi';
 
     if (!records || !Array.isArray(records)) {
@@ -68,7 +68,6 @@ const SCSBApiHelper = module.exports = {
           `posting hold request record (${item.id}) to SCSB API; request not initiated from SCSB UI`,
           { holdRequestId: item.id }
         );
-
         return scsbClient.addRequestItem(scsbModel)
         .then(result => {
           item['scsbResponse'] = result;
@@ -98,7 +97,7 @@ const SCSBApiHelper = module.exports = {
                   { holdRequestId: item.id, error: err }
                 );
 
-                // At this point, we could not POST the failed hold request to the results stream.
+                // At this point, we could not POST the hold request to the results stream.
                 // We are exiting the promise chain and restarting the kinesis handler
                 return callback(HoldRequestConsumerError({
                   message: `unable to post failed EDD hold request record (${item.id}) to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,

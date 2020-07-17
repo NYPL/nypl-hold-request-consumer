@@ -1,0 +1,15 @@
+{
+  "nyplSource": "sierra-nypl",
+  "bibIds": ["10026885"],
+  "id": "10011664",
+  "nyplType": "item",
+  "updatedDate": "2017-08-07T20:33:50-04:00",
+  "createdDate": "2009-02-03T00:51:38-05:00",
+  "deletedDate": null,
+  "deleted": false,
+  "location": { "code": "rc2ma", "name": "OFFSITE - Request in Advance" },
+  "status": { "code": "-", "display": "AVAILABLE", "duedate": null },
+  "barcode": "33433000948251",
+  "callNumber": "|hJXE 71-1",
+  "itemType": null
+}

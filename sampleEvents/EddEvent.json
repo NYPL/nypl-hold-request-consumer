@@ -2,12 +2,12 @@
   "Records": [
     {
       "kinesis": {
-          "kinesisSchemaVersion": "1.0",
-  "sequenceNumber": "49586053432934900701673373594991262976506579788299763714",
-  "approximateArrivalTimestamp": "2018-09-13T19:15:56.033Z",
-  "data": "wjIkMTE0NjA1YjlhYjc2YmM0YzY5DjU0Mjc3MDEWc2llcnJhLW55cGwCMjIwMTgtMDktMTNUMTU6MTU6NTUtMDQ6MDAAAAACBmVkZAJpEDEwMDExNjMwAAIyMjAxOC0wMS0wN1QwMjozMjo1MSswMDowMAICAAIgdXNlckBleGFtcGxlLmNvbRZDaGFwdGVyIE9uZQYxMDAGMTUwAhJBbm9ueW1vdXMCBjE1OQIWU3VtbWVyIDIwMTcCRkJhY2t1cCBwaHlzaWNhbCBkZWxpdmVyeSByZXF1ZXN0ZWQuAj5JdGVtIHJlcG9ydGVkIGFzIG5vdCBhdmFpbGFibGUu",
-  "partitionKey": "5b9ab76be5693"
-},
+        "kinesisSchemaVersion": "1.0",
+        "sequenceNumber": "49586053432934900701673373594991262976506579788299763714",
+        "approximateArrivalTimestamp": "2018-09-13T19:15:56.033Z",
+        "data": "wjIkMTE0NjA1YjlhYjc2YmM0YzY5DjU0Mjc3MDEWc2llcnJhLW55cGwCMjIwMTgtMDktMTNUMTU6MTU6NTUtMDQ6MDAAAAACBmVkZAJpEDEwMDExNjMwAAIyMjAxOC0wMS0wN1QwMjozMjo1MSswMDowMAICAAIgdXNlckBleGFtcGxlLmNvbRZDaGFwdGVyIE9uZQYxMDAGMTUwAhJBbm9ueW1vdXMCBjE1OQIWU3VtbWVyIDIwMTcCRkJhY2t1cCBwaHlzaWNhbCBkZWxpdmVyeSByZXF1ZXN0ZWQuAj5JdGVtIHJlcG9ydGVkIGFzIG5vdCBhdmFpbGFibGUu",
+        "partitionKey": "5b9ab76be5693"
+      },
       "eventSource": "aws:kinesis",
       "eventVersion": "1.0",
       "eventName": "aws:kinesis:record",

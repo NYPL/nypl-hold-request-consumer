@@ -3,7 +3,7 @@ const async = require('async');
 const axios = require('axios');
 const qs = require('qs');
 const HoldRequestConsumerError = require('../models/HoldRequestConsumerError');
-const ResultStreamHelper = require('../helpers/ResultStreamHelper')
+const ResultStreamHelper = require('../helpers/ResultStreamHelper');
 const logger = require('../helpers/Logger');
 const CACHE = require('../globals/index');
 
@@ -180,7 +180,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     );
   };
 
-  this.processGetItemDataRequests = (records, token, apiUrl) => {
+  this._processGetItemDataRequests = (records, token, apiUrl) => {
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -249,7 +249,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     });
   };
 
-  this.processGetPatronBarcodeRequests = (records, token, apiUrl) => {
+  this._processGetPatronBarcodeRequests = (records, token, apiUrl) => {
     const nyplDataApiBaseUrl = apiUrl;
 
     return new Promise((resolve, reject) => {
@@ -414,11 +414,11 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
     }
 
     if (type === 'item-service') {
-      return this.processGetItemDataRequests(records, accessToken, apiUrl);
+      return this._processGetItemDataRequests(records, accessToken, apiUrl);
     }
 
     if (type === 'patron-barcode-service') {
-      return this.processGetPatronBarcodeRequests(records, accessToken, apiUrl);
+      return this._processGetPatronBarcodeRequests(records, accessToken, apiUrl);
     }
   };
 
