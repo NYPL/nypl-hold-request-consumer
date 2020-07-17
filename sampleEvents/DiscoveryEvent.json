@@ -2,12 +2,12 @@
   "Records": [
     {
       "kinesis": {
-  "kinesisSchemaVersion":"1.0",
-  "sequenceNumber": "49586053432934900701673372692451976307549532375698374658",
-  "approximateArrivalTimestamp": "2018-09-13T16:39:03.217Z",
-  "data": "wDIkMTE0NTk1YjlhOTJhNjc0MjE0DjU0Mjc3MDEWc2llcnJhLW55cGwCMjIwMTgtMDktMTNUMTI6Mzk6MDItMDQ6MDAAAAACCGhvbGQCaRAxMDAxMTYzMAIGbWFsAjIyMDE4LTAxLTA3VDAyOjMyOjUxKzAwOjAwAgIAAiB1c2VyQGV4YW1wbGUuY29tFkNoYXB0ZXIgT25lBjEwMAYxNTACEkFub255bW91cwIGMTU5AhZTdW1tZXIgMjAxNwJGQmFja3VwIHBoeXNpY2FsIGRlbGl2ZXJ5IHJlcXVlc3RlZC4CPkl0ZW0gcmVwb3J0ZWQgYXMgbm90IGF2YWlsYWJsZS4=",
-  "partitionKey": "5b9a92a72271f"
-},
+        "kinesisSchemaVersion":"1.0",
+        "sequenceNumber": "49586053432934900701673372692451976307549532375698374658",
+        "approximateArrivalTimestamp": "2018-09-13T16:39:03.217Z",
+        "data": "wDIkMTE0NTk1YjlhOTJhNjc0MjE0DjU0Mjc3MDEWc2llcnJhLW55cGwCMjIwMTgtMDktMTNUMTI6Mzk6MDItMDQ6MDAAAAACCGhvbGQCaRAxMDAxMTYzMAIGbWFsAjIyMDE4LTAxLTA3VDAyOjMyOjUxKzAwOjAwAgIAAiB1c2VyQGV4YW1wbGUuY29tFkNoYXB0ZXIgT25lBjEwMAYxNTACEkFub255bW91cwIGMTU5AhZTdW1tZXIgMjAxNwJGQmFja3VwIHBoeXNpY2FsIGRlbGl2ZXJ5IHJlcXVlc3RlZC4CPkl0ZW0gcmVwb3J0ZWQgYXMgbm90IGF2YWlsYWJsZS4=",
+        "partitionKey": "5b9a92a72271f"
+      },
       "eventSource": "aws:kinesis",
       "eventVersion": "1.0",
       "eventName": "aws:kinesis:record",
@@ -15,11 +15,5 @@
       "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
       "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/HoldRequest"
     }
-  ],
-  "eventSource": "aws:kinesis",
-  "eventVersion": "1.0",
-  "eventName": "aws:kinesis:record",
-  "awsRegion": "us-east-1",
-  "invokeIdentityArn": "arn:aws:iam::224280085904:role/lambda_basic_execution",
-  "eventSourceARN": "arn:aws:kinesis:us-east-1:224280085904:stream/HoldRequest"
+  ]
 }

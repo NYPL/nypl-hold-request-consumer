@@ -4,10 +4,10 @@ const LambdaEnvVars = require('lambda-env-vars');
 const HoldRequestConsumerModel = require('./src/models/HoldRequestConsumerModel');
 const HoldRequestConsumerError = require('./src/models/HoldRequestConsumerError');
 const ApiServiceHelper = require('./src/helpers/ApiServiceHelper');
-const SCSBApiHelper = require('./src/helpers/SCSBApiHelper');
+const HoldRequestDispatcher = require('./src/helpers/HoldRequestDispatcher');
 const logger = require('./src/helpers/Logger');
 const CACHE = require('./src/globals/index');
-const LambdaEnvVarsClient = new LambdaEnvVars.default();
+const LambdaEnvVarsClient = new LambdaEnvVars.default(); // eslint-disable-line
 
 exports.kinesisHandler = (records, opts = {}, context, callback) => {
   const functionName = 'kinesisHandler';
@@ -129,8 +129,8 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
 
       return hrcModel.filterScsbUiRecords(hrcModel.getRecords());
     })
-    .then(filteredScsbRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
-      filteredScsbRecordsToProcess,
+    .then(filteredRecordsToProcess => hrcModel.validateRemainingRecordsToProcess(
+      filteredRecordsToProcess,
       'the lambda has completed processing; the hold request records array is empty; records initiated from the SCSB UI have been filtered out resulting in an empty array; no fatal errors have occured'
     ))
     .then(remainingRecordsToProcess => {
@@ -159,22 +159,31 @@ exports.kinesisHandler = (records, opts = {}, context, callback) => {
     })
     .then(recordsWithPatronData => hrcModel.validateRemainingRecordsToProcess(
       recordsWithPatronData,
-      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
+      'the lambda has completed processing; the hold request records array is empty and the lambda will not execute http POST requests to the SCSB API or OnSiteHoldRequestService; this occurs when failed records have been filtered out and posted to the HoldRequestResult stream; no fatal errors have occured'
     ))
     .then(recordsToProcessWithPatronData => {
       hrcModel.setRecords(recordsToProcessWithPatronData);
+      const collectionApisData = {
+        onSite: {
+          apiBaseUrl: CACHE.getNyplDataApiBaseUrl(),
+          apiKey: CACHE.getAccessToken()
+        },
+        scsb: {
+          apiBaseUrl: CACHE.getSCSBApiBaseUrl(),
+          apiKey: CACHE.getSCSBApiKey()
+        }
+      }
 
-      return SCSBApiHelper.handlePostingRecordsToSCSBApi(
+      return HoldRequestDispatcher.dispatchRecords(
         hrcModel.getRecords(),
-        CACHE.getSCSBApiBaseUrl(),
-        CACHE.getSCSBApiKey()
-      );
+        collectionApisData
+      )
     })
-    .then(resultsOfRecordswithScsbResponse => {
+    .then(resultsOfRecords => {
       const successMsg = 'successfully completed Lambda execution without any fatal or recoverable errors';
 
       logger.info(successMsg);
-      hrcModel.setRecords(resultsOfRecordswithScsbResponse);
+      hrcModel.setRecords(resultsOfRecords);
 
       return callback(null, successMsg);
     })

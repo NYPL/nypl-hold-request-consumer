@@ -1,0 +1,15 @@
+{
+  "nyplSource": "sierra-nypl",
+  "bibIds": [ "18353500" ],
+  "id": "25094273",
+  "nyplType": "item",
+  "updatedDate": "2017-12-24T05:04:06-05:00",
+  "createdDate": "2010-05-19T15:02:07-04:00",
+  "deletedDate": null,
+  "deleted": false,
+  "location": { "code": "mal82", "name": "SASB M1 - General Research - Room 315" },
+  "status": { "code": "-", "display": "AVAILABLE", "duedate": null },
+  "barcode": "33433087753616",
+  "callNumber": "|hJFE 10-3105",
+  "itemType": null
+}
