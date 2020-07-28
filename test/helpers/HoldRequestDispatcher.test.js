@@ -21,6 +21,8 @@ describe('HoldRequestConsumer Lambda: HoldRequestDispatcher', () => {
       const sortedRecords = HoldRequestDispatcher.sortRecords(mixedRecords)
       expect(sortedRecords.scsb.length).to.equal(2)
       expect(sortedRecords.onSite.length).to.equal(1)
+      expect(sortedRecords.onSite[0].item.nyplSource).to.equal('sierra-nypl')
+      expect(sortedRecords.onSite[0].item.location.code).to.not.match(/^rc/i)
     })
   })
   describe('dispatchRecords', () => {
