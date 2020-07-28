@@ -11,7 +11,7 @@ const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper')
 const onSiteEddRequest = require('../fixtures/onSiteEddRequest')
 const onSiteRequest = require('../fixtures/onSiteRequest')
 const recapNyplItemRequest = require('../fixtures/nyplRecapRequest')
-const partnerItemRequest = require('../fixtures/nyplRecapRequest')
+const partnerItemRequest = require('../fixtures/partnerItemRequest')
 
 const mixedRecords = [ onSiteEddRequest, recapNyplItemRequest, partnerItemRequest ]
 
