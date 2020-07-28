@@ -10,16 +10,19 @@ const SCSBApiHelper = require('../../src/helpers/SCSBApiHelper')
 
 const onSiteEddRequest = require('../fixtures/onSiteEddRequest')
 const onSiteRequest = require('../fixtures/onSiteRequest')
-const recapRequest = require('../fixtures/nyplRecapRequest')
+const recapNyplItemRequest = require('../fixtures/nyplRecapRequest')
+const partnerItemRequest = require('../fixtures/partnerItemRequest')
 
-const mixedRecords = [ onSiteEddRequest, recapRequest ]
+const mixedRecords = [ onSiteEddRequest, recapNyplItemRequest, partnerItemRequest ]
 
 describe('HoldRequestConsumer Lambda: HoldRequestDispatcher', () => {
   describe('sortRecords', () => {
-    it('should sort records by holding location', () => {
+    it('should sort records according to nyplSource and holding location', () => {
       const sortedRecords = HoldRequestDispatcher.sortRecords(mixedRecords)
-      expect(sortedRecords.scsb.length).to.equal(1);
-      expect(sortedRecords.onSite.length).to.equal(1);
+      expect(sortedRecords.scsb.length).to.equal(2)
+      expect(sortedRecords.onSite.length).to.equal(1)
+      expect(sortedRecords.onSite[0].item.nyplSource).to.equal('sierra-nypl')
+      expect(sortedRecords.onSite[0].item.location.code).to.not.match(/^rc/i)
     })
   })
   describe('dispatchRecords', () => {
@@ -57,7 +60,7 @@ describe('HoldRequestConsumer Lambda: HoldRequestDispatcher', () => {
 
     describe('only scsb hold requests', () => {
       it('should only call SCSBApiHelper `handlePostingRecords` function', () => {
-        HoldRequestDispatcher.dispatchRecords([ recapRequest ])
+        HoldRequestDispatcher.dispatchRecords([ recapNyplItemRequest ])
         expect(postOnSiteHoldRequestStub.notCalled).to.be.true
         expect(postScsbHoldRequestStub.calledOnce).to.be.true
       })
