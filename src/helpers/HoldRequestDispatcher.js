@@ -12,7 +12,7 @@ const HoldRequestDispatcher = module.exports = {
       numScsbHoldRequests: holdRequestRecords.scsb.length,
       numOnSiteHoldRequests: holdRequestRecords.onSite.length
     })
-    let scsbApiResolution = Promise.resolve([]);
+    let scsbApiResolution = Promise.resolve([])
     if (holdRequestRecords.scsb.length) {
       scsbApiResolution = SCSBApiHelper.handlePostingRecords(
         holdRequestRecords.scsb,
@@ -22,7 +22,7 @@ const HoldRequestDispatcher = module.exports = {
     };
     resolutions.push(scsbApiResolution)
 
-    let onSiteHoldRequestResolution = Promise.resolve([]);
+    let onSiteHoldRequestResolution = Promise.resolve([])
     if (holdRequestRecords.onSite.length) {
       onSiteHoldRequestResolution = OnSiteHoldRequestHelper.handlePostingRecords(
         holdRequestRecords.onSite,
@@ -42,8 +42,11 @@ const HoldRequestDispatcher = module.exports = {
       })
   },
   sortRecords: (records) => records.reduce((records, record) => {
-    (/^rc/i.test(record.item.location.code))
-    ? records.scsb.push(record) : records.onSite.push(record)
+    (
+      record.item.nyplSource === 'sierra-nypl' &&
+      !/^rc/i.test(record.item.location.code)
+    )
+    ? records.onSite.push(record) : records.scsb.push(record)
 
     return records
   }, { scsb: [], onSite: [] })
