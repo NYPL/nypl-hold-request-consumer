@@ -34,7 +34,11 @@ $ npm install
 
 All deployment configuration is versioned in `./config/`. *However..*
 
-The app expects one secret configuration param - `SLACK_WEBHOOK_URL` - to be plaintext. For the purpose of putting all configuration in source control, we've gone ahead and encrypted it as `SLACK_WEBHOOK_URL_ENCRYPTED`. The actual deployed variable remains plaintext and named `SLACK_WEBHOOK_URL`. Thus, Travis can safely deploy to any environment without overwriting the *real* param. We should correct this situtation in the future by modifying the app to decrypt `SLACK_WEBHOOK_URL`.
+The app expects one secret configuration param - `SLACK_WEBHOOK_URL` - to be plaintext. For the purpose of putting all configuration in source control, we've gone ahead and encrypted it as `SLACK_WEBHOOK_URL_ENCRYPTED`. The actual deployed variable remains plaintext and named `SLACK_WEBHOOK_URL`. Thus, Travis can safely deploy to any environment without overwriting the *real* param. We should correct this situtation in the future by modifying the app to decrypt `SLACK_WEBHOOK_URL`. (Update: Note that SLACK_WEBHOOK_URL is no longer used in deployed code, so we may consider retiring this feature.)
+
+#### Changes to SCSB/UAT endpoints
+
+When HTC changes the SCSB endpoint, apply changes to the relevant environment file in `config/`. `SCSB_API_BASE_URL` should be plain text. `SCSB_API_KEY` should be encrypted. Merging should deploy changes.
 
 ### Developing Locally
 
@@ -107,7 +111,7 @@ $ npm run lint [filename].js // Will lint the specific JS file
 
 ## Git Workflow
 
-This repo follows a common [Development-QA-Master](https://github.com/NYPL/engineering-general/blob/a19c78b028148465139799f09732e7eb10115eef/standards/git-workflow.md#development-qa-master) git workflow (without tagging or CHANGELOG):
+This repo follows a common [Development-QA-Main](hhttps://github.com/NYPL/engineering-general/blob/master/standards/git-workflow.md#development-qa-main) git workflow (without tagging or CHANGELOG):
 
  - Cut feature branch from `development`
  - After approval, merge into `development`
