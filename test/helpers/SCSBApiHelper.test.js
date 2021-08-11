@@ -192,6 +192,12 @@ describe('HoldRequestConsumer Lambda: SCSB API Helper', () => {
 
       return expect(result).to.eql('NYPL');
     });
+
+    it('should return a matching institution code if recap-hl passed', () => {
+      const result = getInstitutionCode('recap-hl');
+
+      return expect(result).to.eql('HL');
+    });
   });
 
   describe('generateSCSBModel(object) function', () => {

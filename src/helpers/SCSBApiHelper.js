@@ -229,16 +229,14 @@ const SCSBApiHelper = module.exports = {
   },
   getInstitutionCode: (nyplCode) => {
     // Codes defined in https://htcrecap.atlassian.net/wiki/display/RTG/Request+Item
-    if (nyplCode === 'recap-cul') {
-      return 'CUL';
+
+    // Check for partner institution code (e.g. recap-hl, recap-cul, recap-pul)
+    if (/^recap-/.test(nyplCode)) {
+      return nyplCode.split('-')[1].toUpperCase();
     }
 
     if (nyplCode === 'sierra-nypl') {
       return 'NYPL';
-    }
-
-    if (nyplCode === 'recap-pul') {
-      return 'PUL';
     }
   },
   generateSCSBModel: (object = {}) => {
