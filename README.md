@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/NYPL/nypl-hold-request-consumer.svg?branch=master)](https://travis-ci.org/NYPL/nypl-hold-request-consumer)
 [![Dependency Status](https://gemnasium.com/badges/github.com/NYPL/nypl-hold-request-consumer.svg)](https://gemnasium.com/github.com/NYPL/nypl-hold-request-consumer)
 
-An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider.
+An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider. See [this writeup](https://github.com/NYPL/lsp_workflows/blob/master/workflows/patron_hold_request.md) and [this diagram](https://docs.google.com/presentation/d/1WorDgAffT3Hy5ZNGbbFYIEFKhRH4Mv_oiRHbaMmArmU/edit#slide=id.g8d85cf9fcf_0_64) for more context. The app essentially listens for newly created hold-requests broadcast by the HoldRequest service and performs the necessary work depending on the type of hold request:
+ - If the hold-request was placed in RC for an item in ReCAP, the app will hit the SCSB API
+ - If the hold-request was placed in RC for an on-site item, the app will hit [the OnSiteHoldRequestService](https://github.com/NYPL/on-site-hold-request-service)
 
 ## Table of Contents
 - [Requirements](#requirements)
