@@ -57,5 +57,29 @@ describe('HoldRequestConsumer Lambda: OnSiteHoldRequestHelper', () => {
 
   describe('generateModel(object) function', () => {
     const generateOnSiteHoldRequestModel = OnSiteHoldRequestHelper.generateModel;
+    it('should handle the expected collection of fields and ignore others', () => {
+      const mockRecord = {
+        patron: 'Cthulhu',
+        nyplSource: 'recap-R\'lyeh',
+        pickupLocation: 'SASB',
+        record: 'Piano for 8 hands',
+        neededBy: 'yesterday',
+        numberOfCopies: '8',
+        docDeliveryData: 'what is this field?',
+        requestType: 'hold',
+        additionalNotes: 'Ph\'nglui mglw\'nafh Cthulhu R\'lyeh wgah\'nagl fhtagn',
+      }
+      const generatedModel = generateOnSiteHoldRequestModel(mockRecord)
+      const keys = Object.keys(generatedModel)
+      expect(keys.length).to.equal(8)
+      expect(keys).to.include('patron')
+      expect(keys).to.include('nyplSource')
+      expect(keys).to.include('record')
+      expect(keys).to.include('pickupLocation')
+      expect(keys).to.include('neededBy')
+      expect(keys).to.include('numberOfCopies')
+      expect(keys).to.include('docDeliveryData')
+      expect(keys).to.include('requestType')
+    })
   });
 });
