@@ -13,6 +13,7 @@ const OnSiteHoldRequestHelper = module.exports = {
     neededBy,
     numberOfCopies,
     docDeliveryData,
+    requestType,
   }) => {
     return {
       patron,
@@ -21,7 +22,8 @@ const OnSiteHoldRequestHelper = module.exports = {
       pickupLocation,
       neededBy,
       numberOfCopies,
-      docDeliveryData
+      docDeliveryData,
+      requestType,
     }
   },
   handlePostingRecords: (requests, apiData) => {
@@ -32,43 +34,6 @@ const OnSiteHoldRequestHelper = module.exports = {
     return new Promise((resolve, reject) => {
       async.mapSeries(requests, (request, callback) => {
         const isEdd = request.docDeliveryData && request.docDeliveryData.emailAddress
-        /*
-          if on-site hold requests are implemented for on-site use
-          this conditional is no longer relevant
-        */
-        if (!isEdd) {
-          logger.info(`Not implemented: on-site hold request for on-site use`, { holdRequestId: request.id })
-          return ResultStreamHelper.postRecordToStream({
-            holdRequestId: request.id,
-            jobId: request.jobId,
-            errorType: 'not-implemented-use-on-site-request',
-            errorMessage: `Not implemented: on-site hold request for on-site use record ${request.id}`
-          })
-          .then(response => {
-            logger.info(
-              `successfully posted failed hold request record (${request.id}) to HoldRequestResult stream`,
-              { holdRequestId: request.id }
-            )
-
-            return callback(null, request)
-          })
-          .catch(error => {
-            logger.error(
-              `unable to post hold request for on-site record to results stream, received an error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-              { holdRequestId: request.id, error: error }
-            )
-
-            // At this point, we could not POST the failed hold request to the results stream.
-            // We are exiting the promise chain and restarting the kinesis handler
-            return callback(HoldRequestConsumerError({
-              message: `unable to post failed hold request for on-site record to results stream, received error from HoldRequestResult stream; exiting promise chain due to fatal error`,
-              type: 'hold-request-result-stream-error',
-              status: error.response && error.response.status ? error.response.status : null,
-              function: 'postRecordToStream',
-              error: error
-            }))
-          })
-        }
         const eddLogText = isEdd ? 'EDD ' : ''
         const requestBody = OnSiteHoldRequestHelper.generateModel(request)
         logger.info(`posting ${eddLogText}hold request for on-site item (${requestBody.record})`, { holdRequestId: request.id })
