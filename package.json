@@ -34,7 +34,7 @@
     "@nypl/nypl-core-objects": "2.0.0",
     "@nypl/nypl-streams-client": "0.1.4",
     "@nypl/scsb-rest-client": "1.0.4",
-    "async": "2.5.0",
+    "async": "2.6.4",
     "aws-sdk": "2.112.0",
     "axios": "0.16.2",
     "circular-json": "0.3.3",
