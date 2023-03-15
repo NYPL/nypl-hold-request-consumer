@@ -5,7 +5,7 @@
 # relevant AWS_ environment variables, and executes the resulting command.
 
 # Fail if ENVIRONMENT param invalid:
-if ! [[ $1 =~ ^(development|qa|production) ]] ; then
+if ! [[ $1 =~ ^(qa|production) ]] ; then
   echo Aborting travis-deploy. Must specify ENVIRONMENT.
   echo Usage: ./scripts/travis-deploy ENVIRONMENT
   echo "  Where ENVIRONMENT is (development|qa|production)"
