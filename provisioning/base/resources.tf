@@ -18,13 +18,13 @@ variable "environment" {
 
   validation {
     condition     = contains(["qa", "production"], var.environment)
-    error_message = "The environmnet must be 'qa' or 'production'."
+    error_message = "The environment must be 'qa' or 'production'."
   }
 }
 
 variable "vpc_config" {
   type = map
-  description = "The name of the environnment (qa, production)"
+  description = "The name of the environment (qa, production)"
 }
 
 # Package the app as a zip:
