@@ -15,9 +15,4 @@ module "base" {
   source = "../base"
 
   environment = "production"
-
-  vpc_config = {
-    subnet_ids         = ["subnet-59bcdd03", "subnet-5deecd15"]
-    security_group_ids = ["sg-116eeb60"]
-  }
 }

@@ -61,10 +61,6 @@ resource "aws_lambda_function" "lambda_instance" {
   # Trigger pulling code from S3 when the zip has changed:
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
 
-  vpc_config {
-    subnet_ids         = var.vpc_config.subnet_ids
-    security_group_ids = var.vpc_config.security_group_ids
-  }
 
   # Load ENV vars from ./config/{environment}.env
   environment {
