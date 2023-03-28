@@ -1,23 +1,36 @@
 language: node_js
-install: npm install
-script: npm test
-cache:
-  directories:
-  - node_modules
-after_success:
-- npm run coverage
-- ENVIRONMENT_NAME=$TRAVIS_BRANCH
-- if [ "$TRAVIS_BRANCH" == "master" ]; then ENVIRONMENT_NAME=production; fi
-before_deploy:
-- echo "All unit tests passed; Preparing to deploy $TRAVIS_BRANCH"
-deploy:
-- provider: script
-  skip_cleanup: true
-  script: "./scripts/travis-deploy.sh $ENVIRONMENT_NAME"
-  on:
-    all_branches: true
-    condition: "$ENVIRONMENT_NAME =~ ^(development|qa|production)$"
-after_deploy: echo "Successfully executed deploy trigger for $TRAVIS_BRANCH"
+install:
+- npm i
+before_install:
+- wget https://releases.hashicorp.com/terraform/"$TF_VERSION"/terraform_"$TF_VERSION"_linux_amd64.zip
+- unzip terraform_"$TF_VERSION"_linux_amd64.zip
+- sudo mv terraform /usr/local/bin/
+- rm terraform_"$TF_VERSION"_linux_amd64.zip
+- git config --global url."https://".insteadOf ssh://
+- npm i -g npm@7
+jobs:
+  include:
+  - stage: test
+    script: npm test
+  - stage: deploy qa
+    if: type IN (push) and branch = qa
+    env:
+    - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_QA
+    - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_QA
+    script:
+    - terraform -chdir=provisioning/qa init -input=false
+    - echo "Deploying to qa"
+    - terraform -chdir=provisioning/qa apply -auto-approve -input=false
+  - stage: deploy production
+    if: type IN (push) and branch = main
+    env:
+    - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PRODUCTION
+    - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PRODUCTION
+    script:
+    - terraform -chdir=provisioning/production init -input=false
+    - echo "Deploying to production"
+    - terraform -chdir=provisioning/production apply -auto-approve -input=false
 env:
   global:
-    secure: x4BAo4+m2FdLbZNUMTPV21Bo7SKpdNM2cUK5bdfA8l1grzgzBWNyrt+btPKPQJiI6Qq1WNx8+VvOmgcyMxjaSEI9lFbMR+JTH/3oF2/agai8jN09bsgysVyAffe5kPzd3gsMXO1CuzViR3Gi3eYH3VuNGVy0qhDONR6d4jj+/pvEEsAIuwVMl4VTwuAR/TvvEXntn//WsHR3QoanUu0FAqbiFHlKYduJbYzQ80Ri6vzaoNiVEy/NDPbnl9c5R2hGVq9CLDgo356K5Cn9jqFb/UdhFJYOLycMj34EG9RrTNB5alvJLmVAPdKPEsNndrRhugmJJkGICk/4dRQUxkZf9RzdVEL9Ox8deT4HdwT8xi/NE2nOcCXH3sZ5zK6a2tTPUMpJPP45H2PZ/xWSUdfs4AneAoPfwt4AEW7YlkOdiqRTOZs9zXA2cdONDHIYgE7Ju38ve9Uz3AV7LYmPGv+VCWYnW5v+3ug5VbNQX18MUqSv4fnIdm5HmoUuS2qZEDX6Czi0gHnWgVAQZ0P1P9w+CeisC927T6adbKDPwl5OdyI6+/zdO8RDPBTVu6FBZM8ddLeETpEqLfuD8Bg5XjDlua3MxRbAfchpahnBxwZQpr6BDBfUJT0r82Lc2pjQQ5L4TVn9vwAlXolv/f221/jizFtSSMJKwlF/KF3f2EsTmPY=
+  - TF_VERSION=1.0.11
+  - secure: 00UrklOoV6Dz0RQSXpZmokMPZhuXVlfMUomb6BEuSWexdI/5IC8Qx+Mh4/Cw2VoEzxGvVzQ/ehLununkjcqW+/urw60ar2uOsN06s9F3aicBkpRV9ZRucc8+IknmFBZG5jbYMNVLB/xmpIzzmQ1SRF/sUCSwij2z3s64ph1i/MsTMvfdvcibUeookZMRo/QUINyN88B6e4G/f+h4Xz3EXUVl6E3rT96kWmqeVyERySur5/2O5k2vwPegt8Tj3qNgO1peWdFJrKCDbwwPB5PemYp6upoPFFpMig+G43Fc9XPeEmu54kN72/7g7WewwZjX+EizGA5a5leTXmQU0nSVTEG1qX3OSeVCrnJ9yKnP8ouEZGcFwzDJKc7zgErTJGFHYmL+ElhFYrmoUvqyOEYDgWLrLt7oUb1hH+kPChgzGAdMG50uFmCfmm99tSYs+SCMHQpWm9WSIj9QP9wbSL7B1kflRRuq7MA0+lhZIxua/+Fl1xDqqBVVhsuhtpomKqOC5BXp0gJ6o3WnzZ6O25cpi4izgj6dUTXHoLVpC798nOf92KvqJ5295b5E/1BrZkjsvFttHHLAjv33Np+haSfWVim83ABlwuYrrwHXXWh7wmNuGrQLconqd+DkpGCvqntdFAAVfiVwOVwCnb0PbWdtVIX53X+Pv39XwR36jzDlrYk=
