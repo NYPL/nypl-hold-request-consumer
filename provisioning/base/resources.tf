@@ -22,11 +22,6 @@ variable "environment" {
   }
 }
 
-variable "vpc_config" {
-  type = map
-  description = "The name of the environment (qa, production)"
-}
-
 # Package the app as a zip:
 data "archive_file" "lambda_zip" {
   type        = "zip"
