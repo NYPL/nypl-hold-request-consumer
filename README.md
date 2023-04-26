@@ -1,9 +1,9 @@
 # NYPL Hold Request Consumer Lambda
-[![Coverage Status](https://coveralls.io/repos/github/NYPL/nypl-hold-request-consumer/badge.svg?branch=master)](https://coveralls.io/github/NYPL/nypl-hold-request-consumer?branch=master)
-[![Build Status](https://travis-ci.org/NYPL/nypl-hold-request-consumer.svg?branch=master)](https://travis-ci.org/NYPL/nypl-hold-request-consumer)
+[![Coverage Status](https://coveralls.io/repos/github/NYPL/nypl-hold-request-consumer/badge.svg?branch=main)](https://coveralls.io/github/NYPL/nypl-hold-request-consumer?branch=main)
+[![Build Status](https://travis-ci.org/NYPL/nypl-hold-request-consumer.svg?branch=main)](https://travis-ci.org/NYPL/nypl-hold-request-consumer)
 [![Dependency Status](https://gemnasium.com/badges/github.com/NYPL/nypl-hold-request-consumer.svg)](https://gemnasium.com/github.com/NYPL/nypl-hold-request-consumer)
 
-An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider. See [this writeup](https://github.com/NYPL/lsp_workflows/blob/master/workflows/patron_hold_request.md) and [this diagram](https://docs.google.com/presentation/d/1WorDgAffT3Hy5ZNGbbFYIEFKhRH4Mv_oiRHbaMmArmU/edit#slide=id.g8d85cf9fcf_0_64) for more context. The app essentially listens for newly created hold-requests broadcast by the HoldRequest service and performs the necessary work depending on the type of hold request:
+An AWS Lambda written in Node JS, responsible for listening to a stream of Hold Requests and sending all valid data to the appropriate Provider. See [this writeup](https://github.com/NYPL/lsp_workflows/blob/main/workflows/patron_hold_request.md) and [this diagram](https://docs.google.com/presentation/d/1WorDgAffT3Hy5ZNGbbFYIEFKhRH4Mv_oiRHbaMmArmU/edit#slide=id.g8d85cf9fcf_0_64) for more context. The app essentially listens for newly created hold-requests broadcast by the HoldRequest service and performs the necessary work depending on the type of hold request:
  - If the hold-request was placed in RC for an item in ReCAP, the app will hit the SCSB API
  - If the hold-request was placed in RC for an on-site item, the app will hit [the OnSiteHoldRequestService](https://github.com/NYPL/on-site-hold-request-service)
 
@@ -64,7 +64,7 @@ For details about how each of these events will be processed, see the github rep
 
 ### Deploying your Lambda
 
-Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/master (i.e. production).
+Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/main (i.e. production).
 
 Deployments (AWS account `nypl-digital-dev`):
  * Production: Lambda > Functions > HoldRequestConsumer-production
@@ -113,12 +113,12 @@ $ npm run lint [filename].js // Will lint the specific JS file
 
 ## Git Workflow
 
-This repo follows a common [Development-QA-Main](hhttps://github.com/NYPL/engineering-general/blob/master/standards/git-workflow.md#development-qa-main) git workflow (without tagging or CHANGELOG):
+This repo follows a common [Development-QA-Main](hhttps://github.com/NYPL/engineering-general/blob/main/standards/git-workflow.md#development-qa-main) git workflow (without tagging or CHANGELOG):
 
  - Cut feature branch from `development`
  - After approval, merge into `development`
  - Merge `development` > `qa`
- - Merge `qa` > `master`
+ - Merge `qa` > `main`
 
 ## NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
