@@ -91,7 +91,7 @@ const OnSiteHoldRequestHelper = module.exports = {
         .catch(error => {
           const { response } = error;
           const { statusText, statusCode } = response;
-          logger.error(
+          logger.warn(
             `unable to post on-site ${eddLogText}hold request (${request.id}) to OnSiteHoldRequestService; will post to HoldRequestResult stream`,
             { holdRequestId: request.id, holdRequest: request.body, error: { statusText, statusCode } }
           )

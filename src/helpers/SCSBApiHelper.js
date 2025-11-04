@@ -112,7 +112,7 @@ const SCSBApiHelper = module.exports = {
               return callback(null, item);
             }
           } else {
-            logger.error(
+            logger.warn(
               `posting failed hold request record (${item.id}) to HoldRequestResult stream; the success flag is FALSE for hold request record; check debugInfo for SCSB error message`,
               { holdRequestId: item.id, debugInfo: SCSBApiHelper.getSCSBDebugInfo(result) }
             );
@@ -151,7 +151,7 @@ const SCSBApiHelper = module.exports = {
         })
         .catch(errorResponse => {
           // SCSB API ERROR
-          logger.error(
+          logger.warn(
             `unable to post hold request record (${item.id}) to SCSB API, received an error from SCSB API; posting record to HoldRequestResult stream`,
             { holdRequestId: item.id, record: item, error: errorResponse }
           );
