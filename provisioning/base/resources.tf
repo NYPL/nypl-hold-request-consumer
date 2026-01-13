@@ -14,7 +14,7 @@ provider "aws" {
 variable "environment" {
   type = string
   default = "qa"
-  description = "The name of the environnment (qa, production). This controls the name of lambda and the env vars loaded."
+  description = "The name of the environment (qa, production). This controls the name of lambda and the env vars loaded."
 
   validation {
     condition     = contains(["qa", "production"], var.environment)
