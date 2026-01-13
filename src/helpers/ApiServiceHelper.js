@@ -61,7 +61,7 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
           }
         );
       } else {
-        logger.error(
+        logger.warning(
           errorMessage,
           { holdRequestId: record.id,
             record: record,
