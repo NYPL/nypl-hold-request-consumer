@@ -64,7 +64,7 @@ For details about how each of these events will be processed, see the github rep
 
 ### Deploying your Lambda
 
-Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/main (i.e. production).
+Travis is configured to deploy automatically on updates to origin/development, origin/qa, and origin/production.
 
 Deployments (AWS account `nypl-digital-dev`):
  * Production: Lambda > Functions > HoldRequestConsumer-production
@@ -113,12 +113,12 @@ $ npm run lint [filename].js // Will lint the specific JS file
 
 ## Git Workflow
 
-This repo follows a common [Development-QA-Main](https://github.com/NYPL/engineering-general/blob/main/standards/git-workflow.md#development-qa-main) git workflow (without tagging or CHANGELOG):
+This repo follows a common [Development-QA-Main](https://github.com/NYPL/engineering-general/blob/main/standards/git-workflow.md#development-qa-main) git workflow (without tagging or CHANGELOG). Note that the production branch is called `production` instead of `main`:
 
  - Cut feature branch from `development`
  - After approval, merge into `development`
  - Merge `development` > `qa`
- - Merge `qa` > `main`
+ - Merge `qa` > `production`
 
 ## NPM Dependencies
 * [nypl-streams-client](https://www.npmjs.com/package/@nypl/nypl-streams-client)
