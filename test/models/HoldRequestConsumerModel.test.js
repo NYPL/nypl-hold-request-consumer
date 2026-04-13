@@ -184,6 +184,54 @@ describe('HoldRequestConsumer Lambda: HoldRequestConsumeModel Factory', () => {
 
       return result.should.be.fulfilled.and.eventually.be.an('array').that.includes(dummyRecords[1]);
     });
+
+    it('should remove array elements configured to skip via env var', () => {
+      const dummyRecords = [
+        {
+          id: 216,
+          jobId: '86a40625-53b7-43e3-9c95-e0a0f290f614',
+          patron: '6779366',
+          nyplSource: 'sierra-nypl',
+          createdDate: '2017-07-12T11:47:11-04:00',
+          updatedDate: null,
+          success: false,
+          processed: false,
+          requestType: 'hold',
+          recordType: 'i',
+          record: '13153327',
+          pickupLocation: 'mal',
+          neededBy: '2018-01-07T02:32:51+00:00',
+          numberOfCopies: 1,
+          deliveryLocation: null,
+          docDeliveryData: null
+        },
+        {
+          id: 217,
+          jobId: 'c1cb5981-bcd8-4d3a-873c-ae580f683cd1',
+          patron: '6779366',
+          nyplSource: 'sierra-nypl',
+          createdDate: '2017-07-12T11:48:01-04:00',
+          updatedDate: null,
+          success: false,
+          processed: false,
+          requestType: 'hold',
+          recordType: 'i',
+          record: '11064288',
+          pickupLocation: 'mal',
+          neededBy: '2018-01-07T02:32:51+00:00',
+          numberOfCopies: 1,
+          deliveryLocation: null,
+          docDeliveryData: null
+        }
+      ];
+
+      process.env.SKIP_REQUEST_ID = '217';
+      const result = hrcModel.filterProcessedRecords(dummyRecords);
+      delete process.env.API_KEY;
+
+      return result.should.be.fulfilled.and.eventually.be.an('array').that.includes(dummyRecords[0]);
+      return !result.should.be.fulfilled.and.eventually.be.an('array').that.includes(dummyRecords[1]);
+    });
   });
 
   describe('filterScsbUiRecords(array) function', () => {
