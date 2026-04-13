@@ -189,6 +189,10 @@ function ApiServiceHelper (url = '', clientId = '', clientSecret = '', scope = '
       async.mapSeries(records, (item, callback) => {
         // Only process GET request if the record and nyplSource values are defined
         if (item.record && item.record !== '' && item.nyplSource && item.nyplSource !== '') {
+          // FIXME: Temporary fix to bad CUL holds in production stream:
+          if (item.nyplSource === 'recap-cul' && /^00/.test(item.record)) {
+            item.record = 'it' + item.record
+          }
           const itemApi = `${nyplDataApiBaseUrl}items/${item.nyplSource}/${item.record}`;
 
           logger.info(`fetching Item data for hold request record (${item.id})`, { holdRequestId: item.id });
