@@ -26,6 +26,8 @@ function HoldRequestConsumerModel () {
       const filteredRecords = records.filter(record => {
         if (record.processed) {
           logger.info(`filtered out hold request record (${record.id}); contains the proccessed flag set as true and has been removed from the records array for further processing`);
+        } else if (record.id === process.env.SKIP_REQUEST_ID) {
+          logger.info(`filtered out hold request record (${record.id}); configured to skip via env variable SKIP_REQUEST_ID. Remove env variable and reset iterator to process`);
         }
 
         return !record.processed;
