@@ -67,3 +67,23 @@ resource "aws_cloudwatch_metric_alarm" "hold_requests_blocked" {
     FunctionName = "HoldRequestConsumer-production"
   }
 }
+
+# Lambda invocation errors alarm
+resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
+  alarm_name          = "HoldRequestConsumerLambdaErrorAlarm"
+  alarm_description   = "Lambda function HoldRequestConsumer-production has invocation errors"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  datapoints_to_alarm = 1
+  metric_name         = "Errors"
+  namespace           = "AWS/Lambda"
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+  alarm_actions       = var.alarm_sns_topic_arns
+
+  dimensions = {
+    FunctionName = "HoldRequestConsumer-production"
+  }
+}
