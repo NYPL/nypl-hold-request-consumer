@@ -14,26 +14,26 @@ import {
   id = "/aws/lambda/HoldRequestConsumer-production:HoldRequestConsumerError"
 }
 import {
-  to = aws_cloudwatch_metric_alarm.hold_request_consumer_error
+  to = aws_cloudwatch_metric_alarm.hold_request_consumer_error_alarm
   id = "HoldRequestConsumerError"
 }
 
 # Error (log with level <= 3) alarm
 resource "aws_cloudwatch_log_metric_filter" "hold_request_consumer_error" {
   log_group_name = "/aws/lambda/HoldRequestConsumer-production"
-  name           = "HoldRequestConsumerError"
+  name           = "HoldRequestConsumerLogError"
   pattern        = "{ $.levelCode <= 3 }"
 
   metric_transformation {
-    name      = "HoldRequestConsumerError"
+    name      = "HoldRequestConsumerLogError"
     namespace = "LogMetrics"
     unit      = "None"
     value     = "1"
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "hold_request_consumer_error" {
-  alarm_name          = "HoldRequestConsumerErrorAlarm"
+resource "aws_cloudwatch_metric_alarm" "hold_request_consumer_error_alarm" {
+  alarm_name          = "HoldRequestConsumerErrorLogAlarm"
   alarm_description   = "Alarm for errors coming from the HoldRequestConsumer Lambda"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -50,7 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "hold_request_consumer_error" {
 
 # Iterator age alarm
 resource "aws_cloudwatch_metric_alarm" "hold_requests_blocked" {
-  alarm_name          = "HoldRequestConsumerIteratorAgeError"
+  alarm_name          = "HoldRequestConsumerIteratorAgeErrorAlarm"
   alarm_description   = "Critical– IteratorAge alarm indicating hold requests could be blocked."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods   = 1
