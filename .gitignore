@@ -18,3 +18,9 @@ coverage
 .DS_Store
 *.swp
 *.nyc_output
+
+# Terraform
+.terraform*
+*.hcl
+*.tfstate
+*.zip
